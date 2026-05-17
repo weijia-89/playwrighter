@@ -1,47 +1,33 @@
-# Playwrighter, Playwright Best Practices Reference
+# playwrighter
 
-**Production-ready patterns, templates, and validation tools for Playwright test suites.**
+I built playwrighter as a Playwright pattern library plus a working test-quality scorer, so an AI agent or a human writing E2E tests has both the patterns to follow and an automated way to check whether the suite actually follows them. The patterns (23 of them under `patterns/`) come from Playwright's official docs, from mxschmitt/awesome-playwright, and from conventions I verified across community projects. The scorer at `tools/score-tests.js` reads a directory of `.spec.ts` files and grades them against a rubric that mirrors the patterns, so every anti-pattern documented in `patterns/anti-patterns.md` has a corresponding penalty in the scorer, from `waitForTimeout` calls down through CSS-selector locators where an accessible role would do better. The repo also ships 8 ready-to-copy templates under `templates/` (config, fixtures, auth setup, POMs, package.json) and a second validation tool, `tools/validate-suite.sh`, for the anti-pattern linter pass.
 
-Sourced from official Playwright docs, [`mxschmitt/awesome-playwright`](https://github.com/mxschmitt/awesome-playwright), and verified community patterns.
-
----
-
-## What's Here
-
-### For AI agents
-Multi-tool skill that loads patterns and enforces best practices when generating Playwright tests:
-- **Claude**, `.claude/skills/playwrighter/SKILL.md`
-- **Cursor**, `.cursor/rules/playwrighter.mdc`
-- **Windsurf**, `.windsurf/rules/playwrighter.md` + `/playwrighter` slash command
-
-### For developers
-- **23 pattern files** covering everything from locators to AI test agents
-- **8 ready-to-copy templates** (config, fixtures, auth setup, POMs, test scaffold, test plan, package.json)
-- **2 validation tools** (anti-pattern linter + quality scorecard)
-- **Research index** with primary-source citations from official docs + community
+The skill ships as a multi-tool bundle pointing at the same canonical body. Claude loads `.claude/skills/playwrighter/SKILL.md`, Cursor loads `.cursor/rules/playwrighter.mdc`, and Windsurf loads `.windsurf/rules/playwrighter.md` plus a `/playwrighter` slash command. For human readers, `INDEX.md` is the entry point.
 
 ---
 
-## Quick Start
+## Quick start
 
-### Read the patterns
-Start with `INDEX.md` for an overview, then drill into:
-- `patterns/locator-strategy.md`, accessible locators
-- `patterns/fixtures.md`, Playwright's killer feature
-- `patterns/anti-patterns.md`, what to avoid
-
-### Use the templates
 ```bash
 cp templates/playwright.config.ts your-project/
 cp templates/auth.setup.ts your-project/tests/
 cp templates/fixtures.ts your-project/tests/
-```
 
-### Validate your suite
-```bash
 ./tools/validate-suite.sh ./your-tests
 node tools/score-tests.js ./your-tests --threshold=80
 ```
+
+Start reading from `INDEX.md` for the topic map, then drill into `patterns/locator-strategy.md` for accessible locators, `patterns/fixtures.md` for the fixture-over-hook pattern, and `patterns/anti-patterns.md` for the full list of what the scorer will penalize.
+
+---
+
+## Why a pattern library plus a scorer
+
+A pattern library on its own is documentation, and documentation gets read once and then ignored when the agent or the engineer is moving fast. The discipline I wanted was the suite-quality bar that catches the regression at PR time, so I wrote the scorer to mirror the patterns directly. A `waitForTimeout(N)` call costs 8 points in the rubric, the same penalty for a `networkidle` wait, while a CSS-selector locator like `.btn-primary` costs 6 points, and the `expect(await x.isVisible()).toBe(true)` shape instead of `await expect(x).toBeVisible()` costs 5. The full rubric scores out of 100 and the default CI threshold is 80.
+
+The scorer is intentionally regex-and-AST simple. It can't tell whether your test is meaningfully testing the right thing, and it doesn't catch the semantic anti-patterns that show up in code review (assertions that don't really constrain behavior, test names that misrepresent what the body asserts). What it does catch is the syntactic decay that creeps into a suite over time, from the flake-fix that introduced a `waitForTimeout` to the quick-locator shortcut that landed a CSS selector instead of an accessible role. Those are the regressions a code reviewer also misses when the diff is large and the time is short, and the scorer fails CI before the reviewer has to find them.
+
+The 23 pattern files are the source the scorer's rules trace to. If the scorer penalizes `getByText` over `getByRole`, `patterns/locator-strategy.md` walks through why accessible roles are more stable than visible text. If it penalizes `waitForTimeout`, `patterns/waiting-timing.md` explains the auto-waiting mechanism that makes fixed waits the wrong abstraction. The library and the scorer share a vocabulary, so a contributor or an AI agent reading the SKILL ends up writing tests that pass the scorer because the patterns and the rubric are the same artifact.
 
 ---
 
@@ -216,10 +202,16 @@ After symlinking, ask your AI tool: *"Write a Playwright test for the login flow
 
 ## Related portfolio repos
 
-- **`weijia-89/vibe-check`**: scanner that surfaces hallucinated APIs and other LLM-tell patterns in PR diffs. Run any AI-generated test diff through `vibe-check` before merge.
-- **`weijia-89/palamedes`**: rigorous-research skill plus multi-agent synthesis prompt. Same evidence-discipline shape applied to research output rather than test code.
-- **`weijia-89/trainer.skill`**: routing skill for an 8-specialist agent toolkit. Loads this repo's patterns when the agent encounters Playwright trigger files (`*.spec.ts`, `playwright.config.ts`, etc.).
-- **`weijia-89/northwind-qa`**: a 50-test Playwright suite that uses these patterns end-to-end. Worked example, not just a reference.
+playwrighter sits in a portfolio of QA-for-AI work. The two repos that pair most directly:
+
+- **[`weijia-89/northwind-qa`](https://github.com/weijia-89/northwind-qa)**: a 50-test Playwright suite that uses playwrighter's patterns end-to-end against a React 19 SUT and ships seven real bug reports with regression-test guards. The worked example, not just a reference.
+- **[`weijia-89/vibe-check`](https://github.com/weijia-89/vibe-check)**: a reviewer evidence surfacer for PRs that may contain LLM-generated code. Pair it with playwrighter on QA work, where patterns shape the test and the scanner flags AI-tells in the diff.
+
+Three more in the same ethos:
+
+- **[`weijia-89/oncology-rag-lab`](https://github.com/weijia-89/oncology-rag-lab)**: offline RAG evaluation lab with DeepEval, Phoenix tracing, drift detection, and a regression-gated CI. Same "the wrap matters more than the pipeline" stance applied to LLM evaluation instead of E2E testing.
+- **[`weijia-89/palamedes`](https://github.com/weijia-89/palamedes)**: rigorous-research skill plus a multi-agent synthesis prompt. Companion artifact when the eval target is research output rather than test code.
+- **[`weijia-89/wcag-auditor`](https://github.com/weijia-89/wcag-auditor)**: accessibility audit tool that replaced its LLM-based fix engine with deterministic per-rule templates in v0.3, because the templates were already accurate enough.
 
 ---
 
