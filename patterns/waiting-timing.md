@@ -1,7 +1,6 @@
 # Waiting & Timing Patterns
 
-**Source**: QualityForge, Mailchimp SPA patterns  
-**Confidence**: 95% (verified across 5,263 Mailchimp tests)
+**Source**: [Playwright Auto-waiting Docs](https://playwright.dev/docs/actionability), [Best Practices](https://playwright.dev/docs/best-practices)
 
 ---
 
@@ -30,17 +29,26 @@ await page.getByRole('link').hover();  // Waits for: attached, visible, stable
 
 ### Wait for Element Visibility
 
+**Prefer web-first assertions over `waitFor()`**, better error messages, auto-retry built in.
+
 ```typescript
-// ✅ GOOD: Wait for element to appear
-await page.getByText('Success').waitFor({ state: 'visible' });
-await page.getByRole('button').waitFor({ state: 'attached' });
+// ✅ BEST: Web-first assertion (recommended)
+await expect(page.getByText('Success')).toBeVisible();
 await expect(page.getByText('Loading...')).toBeHidden();
+
+// ✅ Acceptable: Explicit waitFor when you don't want an assertion
+await page.getByRole('button').waitFor({ state: 'attached' });
 ```
+
+**Why prefer `expect().toBeVisible()`:**
+- Auto-retries until timeout (same as `waitFor`)
+- Better failure messages in trace + report
+- Reads as both wait + verification
 
 ### Wait for Page Load (SPA Pattern)
 
 ```typescript
-// ✅ GOOD: SPA navigation pattern (from Mailchimp)
+// ✅ GOOD: SPA navigation pattern
 await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 await page.getByRole('heading').first().waitFor({ state: 'visible', timeout: 10000 });
 
@@ -96,7 +104,7 @@ await expect(page.getByText('Done')).toBeVisible();
 ### ❌ NetworkIdle for SPAs
 
 ```typescript
-// ❌ BAD: Mailchimp pages have continuous analytics/WebSockets
+// ❌ BAD: many SPAs have continuous analytics/WebSocket traffic
 await page.waitForLoadState('networkidle');  // NEVER - causes 100% timeout rate
 
 // ✅ GOOD: Wait for specific element
@@ -160,13 +168,28 @@ await expect(page.getByText('Data')).toBeVisible({
 
 ---
 
-## Evidence
+## Why `networkidle` Fails for SPAs
 
-From Mailchimp R&A QA Suite:
-- **5,263 tests** using `networkidle` → **100% timeout rate**
-- **Same tests** using `domcontentloaded` + element wait → **98.4% pass rate**
+`waitForLoadState('networkidle')` resolves when no network activity for 500ms. But modern SPAs constantly emit:
+- Analytics beacons (Segment, Heap, GA)
+- WebSocket heartbeats
+- Polling requests
+- Service worker syncs
+- Lazy-loaded chunks
 
-**Lesson**: SPAs with analytics/WebSockets never reach `networkidle`. Always wait for specific elements.
+The page is fully usable, but `networkidle` waits forever (then times out).
+
+**Solution:** wait for what you actually care about, a specific element being visible.
+
+```typescript
+// ❌ Hangs on SPAs
+await page.waitForLoadState('networkidle');
+
+// ✅ Specific signal
+await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+```
+
+This is reinforced by Playwright's official docs: "Avoid relying on network idle for SPAs."
 
 ---
 

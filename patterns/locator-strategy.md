@@ -1,7 +1,6 @@
 # Locator Strategy
 
-**Source**: QualityForge PLAYWRIGHT-BEST-PRACTICES.md, Mailchimp patterns  
-**Confidence**: 98% (verified across 127+ Mailchimp test files)
+**Source**: [Playwright Locators Docs](https://playwright.dev/docs/locators), [Best Practices](https://playwright.dev/docs/best-practices)
 
 ---
 
@@ -150,14 +149,34 @@ await nav.getByRole('link', { name: 'Products' }).click();
 
 ---
 
-## Verification Before Using
+## Generating Locators (Codegen)
 
-Before writing locators, verify they exist:
-1. Open the page in a browser
-2. Use browser DevTools to confirm the element structure
-3. Prefer role-based selectors that match real accessibility tree
-4. Test the locator in Playwright Inspector first
+Playwright's official codegen tool picks accessible locators automatically.
+
+```bash
+npx playwright codegen https://your-site.com
+```
+
+This opens a browser + inspector. Click "Pick locator" and hover over elements, Playwright suggests the most resilient selector (role > text > test-id > CSS).
+
+**Use codegen first**, then refine. Don't hand-write locators from CSS.
+
+### VS Code Extension
+Install **Playwright Test for VSCode**. It provides:
+- Inline "Pick locator" command
+- Run/debug individual tests
+- Record new tests
+- Show trace inline
 
 ---
 
-**Remember**: If you're reaching for `.locator()`, ask yourself if there's a more accessible way first.
+## Verification
+
+1. **Codegen first**, `npx playwright codegen <url>` for new tests
+2. **VS Code extension**, pick locators inline while writing
+3. **Test in UI mode**, `npx playwright test --ui` for fast feedback
+4. **Confirm in trace**, open trace.zip to see what locator matched
+
+---
+
+**Rule of thumb**: If you reach for `.locator()` with CSS, you're probably doing it wrong. Codegen will almost always offer a better alternative.

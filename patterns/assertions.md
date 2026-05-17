@@ -1,7 +1,6 @@
 # Assertion Patterns
 
-**Source**: QualityForge, Mailchimp, MC QA Tools  
-**Confidence**: 98%
+**Source**: [Playwright Test Assertions Docs](https://playwright.dev/docs/test-assertions)
 
 ---
 
@@ -138,32 +137,102 @@ await expect(page.getByText('Success')).toBeVisible();
 
 ---
 
-## One Assertion Per Test (Guideline)
+## Poll a Value: `expect.poll()`
+
+Polls a function until its return value matches an assertion. Different from `toPass()`, that retries a block; `poll()` watches a single value over time.
 
 ```typescript
-// ✅ GOOD: Test one logical thing
-test('[TC-001] Login redirects to dashboard', async ({ page }) => {
+// ✅ Poll until API returns the expected status
+await expect.poll(async () => {
+  const response = await page.request.get('/api/order/123');
+  return response.status();
+}, {
+  intervals: [500, 1_000, 2_000, 5_000],
+  timeout: 30_000,
+}).toBe(200);
+
+// ✅ Poll a UI count
+await expect.poll(
+  () => page.getByRole('listitem').count(),
+  { timeout: 10_000 }
+).toBeGreaterThan(5);
+```
+
+Use `poll` for: API status checks, async backend updates, count-based waits.
+
+---
+
+## Retry a Block: `expect.toPass()`
+
+For probing flows that need multiple coordinated checks, wrap them in `expect.toPass()`. Playwright retries the entire block until it passes or times out.
+
+```typescript
+// ✅ Retry a multi-step verification
+await expect(async () => {
+  const response = await page.request.get('/api/order/123');
+  expect(response.status()).toBe(200);
+  const data = await response.json();
+  expect(data.status).toBe('shipped');
+}).toPass({ timeout: 10_000, intervals: [500, 1000, 2000] });
+```
+
+Use cases:
+- Polling an API for state change
+- Eventual consistency checks
+- Multi-condition UI states
+
+**Don't use** for simple element waits, `await expect(locator).toBeVisible()` is sufficient.
+
+---
+
+## Web-First vs Manual Assertions
+
+**Web-first assertions auto-retry until timeout.** Always use them.
+
+```typescript
+// ✅ Web-first (auto-retries)
+await expect(page.getByText('welcome')).toBeVisible();
+
+// ❌ Manual (no retry, captures one moment in time)
+expect(await page.getByText('welcome').isVisible()).toBe(true);
+```
+
+The manual form is the #1 cause of flaky tests. Even if the element appears 100ms later, `isVisible()` returned `false` and the test fails.
+
+---
+
+## One Concern Per Test
+
+The "one assertion per test" rule is oversimplified. The real rule:
+
+**One logical concern per test. Multiple assertions verifying that concern are fine.**
+
+```typescript
+// ✅ GOOD: One concern (login flow), multiple verifications
+test('[TC-001] Login redirects and shows welcome', async ({ page }) => {
   await page.goto('/login');
   await page.getByLabel('Email').fill('user@example.com');
   await page.getByLabel('Password').fill('pass123');
   await page.getByRole('button', { name: 'Sign In' }).click();
-  
-  // Single logical assertion (redirect happened)
-  await expect(page).toHaveURL(/.*dashboard/);
-});
 
-test('[TC-002] Dashboard shows welcome message', async ({ page }) => {
-  // Separate test for different concern
-  await expect(page.getByText('Welcome back')).toBeVisible();
+  await expect(page).toHaveURL(/.*dashboard/);
+  await expect(page.getByText('Welcome')).toBeVisible();
+  await expect(page.getByTestId('user-menu')).toBeVisible();
 });
 ```
+
+**Use `expect.soft()`** for non-blocking related checks (see Soft Assertions section above).
+
+**Split tests** when concerns are unrelated (e.g., login redirect vs. welcome banner content vs. menu rendering).
 
 ---
 
 ## Summary
 
 - Use `.toBeVisible()` not `.toBeTruthy()`
+- Use web-first `await expect(x)...` not `expect(await x.isVisible())`
 - Use `.toHaveText()` not string comparison
 - Assert after every important action
-- One logical assertion per test (soft assertions are OK for related checks)
+- One concern per test; multiple assertions OK if they verify that concern
+- Use `expect.soft()` for related non-blocking checks
 - Make failures debuggable with specific matchers

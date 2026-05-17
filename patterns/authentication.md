@@ -1,42 +1,47 @@
 # Authentication Patterns
 
-**Source**: QualityForge, MC QA Tools login-strategies.md  
-**Confidence**: 95%
+**Source**: [Playwright Auth Docs](https://playwright.dev/docs/auth)
 
 ---
 
-## Strategy Priority
+## Four Tiers of Auth Strategy
 
-1. **Reuse auth state** (fastest, most reliable)
-2. **Per-test login** (for isolated tests)
-3. **Cookie import** (for real session reuse)
-4. **Manual login in headed mode** (for SSO/complex auth)
+| Tier | Approach | When to use |
+|------|----------|-------------|
+| **1. Shared account** | One auth state, all tests | Tests don't mutate server state |
+| **2. Per-worker account** | Worker-scoped fixture | Tests mutate state; need isolation |
+| **3. Multiple roles** | Per-role storageState | Admin / user / guest scenarios |
+| **4. API-based auth** | Skip UI, hit auth endpoint | Fastest; recommended when API exists |
 
 ---
 
-## 1. Reuse Authentication State (RECOMMENDED)
+## Tier 1: Shared Account (RECOMMENDED for read-only tests)
 
-### Global Setup
+### Setup project
 
 ```typescript
-// File: auth.setup.ts
-import { test as setup } from '@playwright/test';
+// tests/auth.setup.ts
+import { test as setup, expect } from '@playwright/test';
+import path from 'path';
 
-const authFile = '.auth/user.json';
+const authFile = path.join(__dirname, '../playwright/.auth/user.json');
 
 setup('authenticate', async ({ page }) => {
   await page.goto('/login');
-  await page.getByLabel('Email').fill('test@example.com');
-  await page.getByLabel('Password').fill('Password123!');
-  await page.getByRole('button', { name: 'Sign In' }).click();
-  
-  // Wait for authentication to complete
+  await page.getByLabel('Email').fill(process.env.TEST_USER_EMAIL!);
+  await page.getByLabel('Password').fill(process.env.TEST_USER_PASSWORD!);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+
+  // Wait for post-login state
   await page.waitForURL('**/dashboard');
-  
-  // Save authentication state
+  await expect(page.getByTestId('user-menu')).toBeVisible();
+
+  // Persist auth state
   await page.context().storageState({ path: authFile });
 });
 ```
+
+**Note:** Canonical path is `playwright/.auth/` (per official docs).
 
 ### Configure in playwright.config.ts
 
@@ -51,7 +56,7 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        storageState: '.auth/user.json',
+        storageState: 'playwright/.auth/user.json',
       },
       dependencies: ['setup'],
     },
@@ -61,145 +66,200 @@ export default defineConfig({
 
 **.gitignore**:
 ```
-.auth/
+playwright/.auth/
+.env
 ```
 
 ---
 
-## 2. Per-Test Login (For Isolation)
+## Tier 2: Per-Worker Account (for state-mutating tests)
+
+When tests modify shared server state, give each worker its own account.
 
 ```typescript
-// ✅ GOOD: Login in beforeEach for isolated tests
-test.describe('Authenticated Tests', () => {
-  test.beforeEach(async ({ page }) => {
+// tests/fixtures.ts
+import { test as baseTest, expect } from '@playwright/test';
+import fs from 'fs';
+import path from 'path';
+
+export * from '@playwright/test';
+
+export const test = baseTest.extend<{}, { workerStorageState: string }>({
+  storageState: ({ workerStorageState }, use) => use(workerStorageState),
+
+  workerStorageState: [async ({ browser }, use) => {
+    const id = test.info().parallelIndex;
+    const fileName = path.resolve(
+      test.info().project.outputDir,
+      `.auth/${id}.json`
+    );
+
+    if (fs.existsSync(fileName)) {
+      await use(fileName);
+      return;
+    }
+
+    const page = await browser.newPage({ storageState: undefined });
+    // Acquire a unique account for this worker. Implement based on your backend:
+    // - Create-on-demand via your API
+    // - Pull from a pre-seeded pool keyed by worker index
+    const account = await acquireAccount(id);
+
     await page.goto('/login');
-    await page.getByLabel('Email').fill('test@example.com');
-    await page.getByLabel('Password').fill('Password123!');
-    await page.getByRole('button', { name: 'Sign In' }).click();
-    await page.waitForURL('**/dashboard');
-  });
+    await page.getByLabel('Email').fill(account.email);
+    await page.getByLabel('Password').fill(account.password);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await expect(page.getByTestId('user-menu')).toBeVisible();
 
-  test('[TC-001] User can access settings', async ({ page }) => {
-    await page.getByRole('link', { name: 'Settings' }).click();
-    await expect(page).toHaveURL(/.*settings/);
-  });
+    await page.context().storageState({ path: fileName });
+    await page.close();
+    await use(fileName);
+  }, { scope: 'worker' }],
 });
 ```
 
 ---
 
-## 3. Extract Login Helper
+## Tier 3: Multiple Roles
+
+For admin/user/guest scenarios, save one storageState per role.
 
 ```typescript
-// File: helpers/auth.ts
-import { Page } from '@playwright/test';
+// tests/auth.setup.ts
+import { test as setup, expect } from '@playwright/test';
 
-export async function login(page: Page, email: string, password: string) {
+setup('admin', async ({ page }) => {
   await page.goto('/login');
-  await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
-  await page.getByRole('button', { name: 'Sign In' }).click();
-  await page.waitForURL('**/dashboard');
-}
+  await page.getByLabel('Email').fill('admin@example.com');
+  await page.getByLabel('Password').fill(process.env.ADMIN_PASSWORD!);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.context().storageState({ path: 'playwright/.auth/admin.json' });
+});
 
-export async function logout(page: Page) {
-  await page.getByRole('button', { name: 'User menu' }).click();
-  await page.getByRole('button', { name: 'Logout' }).click();
-  await expect(page).toHaveURL(/.*login/);
-}
+setup('user', async ({ page }) => {
+  // ... similar for user
+  await page.context().storageState({ path: 'playwright/.auth/user.json' });
+});
+```
 
-// Use in tests
-import { login, logout } from './helpers/auth';
+Use per-test or per-describe:
+```typescript
+import { test } from '@playwright/test';
 
-test('[TC-001] Login flow', async ({ page }) => {
-  await login(page, 'test@example.com', 'Password123!');
-  await expect(page.getByText('Welcome')).toBeVisible();
+test.use({ storageState: 'playwright/.auth/admin.json' });
+test('admin can delete users', async ({ page }) => { /* */ });
+
+test.describe('User-only views', () => {
+  test.use({ storageState: 'playwright/.auth/user.json' });
+  test('user sees own profile', async ({ page }) => { /* */ });
 });
 ```
 
 ---
 
-## 4. Environment Variables for Credentials
+## Tier 4: API-Based Authentication (FASTEST)
+
+Skip the UI entirely. Use the `request` context to hit your auth endpoint.
 
 ```typescript
-// .env.example
-BASE_URL=http://localhost:5173
+// tests/auth.setup.ts
+import { test as setup } from '@playwright/test';
+
+setup('authenticate via API', async ({ request }) => {
+  const response = await request.post('/api/auth/login', {
+    data: {
+      email: process.env.TEST_USER_EMAIL!,
+      password: process.env.TEST_USER_PASSWORD!,
+    },
+  });
+  expect(response.ok()).toBe(true);
+
+  // request context now holds auth cookies
+  await request.storageState({ path: 'playwright/.auth/user.json' });
+});
+```
+
+**Why prefer API auth when feasible:**
+- 5-10x faster than UI login
+- More reliable (no UI race conditions)
+- Decouples test setup from login UI changes
+
+**Limits:** SSO/OAuth flows may not work this way.
+
+**For OAuth, SSO/SAML, MFA, or magic-link auth:** see [`oauth-mfa-sso.md`](./oauth-mfa-sso.md) for detailed patterns.
+
+---
+
+## Environment Variables
+
+```bash
+# .env (gitignored)
+BASE_URL=http://localhost:3000
 TEST_USER_EMAIL=test@example.com
-TEST_USER_PASSWORD=Password123!
+TEST_USER_PASSWORD=TestPass123!
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=AdminPass123!
 ```
 
 ```typescript
 // playwright.config.ts
 import * as dotenv from 'dotenv';
 dotenv.config();
-
-export default defineConfig({
-  use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:5173',
-  },
-});
-```
-
-```typescript
-// Use in tests
-const email = process.env.TEST_USER_EMAIL || 'test@example.com';
-const password = process.env.TEST_USER_PASSWORD || 'Password123!';
-
-await page.getByLabel('Email').fill(email);
-await page.getByLabel('Password').fill(password);
-```
-
-**.gitignore**:
-```
-.env
-.auth/
 ```
 
 ---
 
 ## Security Best Practices
 
-1. **Never commit credentials** to version control
-2. **Use .env files** (gitignored)
-3. **Use dedicated test accounts** (not production)
-4. **Store auth state in .auth/** (gitignored)
-5. **Document required credentials** in README
+1. **Never commit credentials**, use `.env` (gitignored)
+2. **Never commit `playwright/.auth/`**, contains live session cookies
+3. **Use dedicated test accounts**, not production users
+4. **Use per-environment secrets** in CI (GitHub secrets, Vault, etc.)
+5. **Rotate test credentials** periodically
+6. **Document required env vars** in README
 
 ---
 
-## Login Testing
+## Testing the Login Flow Itself
+
+The login flow is one feature you DON'T want auto-authenticated for.
 
 ```typescript
-// ✅ Test login itself
-test.describe('Authentication', () => {
-  test('[TC-001] Login with valid credentials', async ({ page }) => {
+import { test, expect } from '@playwright/test';
+
+// Skip storageState for this file
+test.use({ storageState: { cookies: [], origins: [] } });
+
+test.describe('Login feature', () => {
+  test('[TC-001] valid credentials', async ({ page }) => {
     await page.goto('/login');
-    await page.getByLabel('Email').fill('test@example.com');
-    await page.getByLabel('Password').fill('Password123!');
-    await page.getByRole('button', { name: 'Sign In' }).click();
-    
+    await page.getByLabel('Email').fill('user@example.com');
+    await page.getByLabel('Password').fill('TestPass123!');
+    await page.getByRole('button', { name: 'Sign in' }).click();
     await expect(page).toHaveURL(/.*dashboard/);
-    await expect(page.getByText('Welcome')).toBeVisible();
   });
 
-  test('[TC-002] Login with invalid credentials', async ({ page }) => {
+  test('[TC-002] invalid credentials', async ({ page }) => {
     await page.goto('/login');
     await page.getByLabel('Email').fill('wrong@example.com');
-    await page.getByLabel('Password').fill('wrongpass');
-    await page.getByRole('button', { name: 'Sign In' }).click();
-    
-    await expect(page.getByText('Invalid email or password')).toBeVisible();
-    await expect(page).toHaveURL(/.*login/);
+    await page.getByLabel('Password').fill('wrong');
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await expect(page.getByText(/invalid/i)).toBeVisible();
   });
 });
 ```
 
 ---
 
-## Summary
+## Decision Tree
 
-- **Reuse auth state** for fast test execution
-- **Extract login helpers** to avoid duplication
-- **Use environment variables** for credentials
-- **Never commit** `.env` or `.auth/` files
-- **Document credentials** required in README
+```
+Do your tests modify server state?
+├─ NO  → Tier 1: Shared account (one storageState)
+└─ YES → Do you need multiple roles?
+         ├─ NO  → Tier 2: Per-worker account fixture
+         └─ YES → Tier 3: Per-role storageState files
+
+Is your auth API-accessible (no SSO)?
+└─ YES → Combine with Tier 4: API-based setup for speed
+```

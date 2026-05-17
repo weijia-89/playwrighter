@@ -1,57 +1,46 @@
-# Playwrighter - Playwright Test Harness & Best Practices
+# Playwrighter, Playwright Best Practices Reference
 
-**Production-ready Playwright test generation and execution framework**
+**Production-ready patterns, templates, and validation tools for Playwright test suites.**
 
-Combines enterprise QA best practices from:
-- **Intuit QualityForge** - Test generation, validation, best practices
-- **Mailchimp Playwright patterns** - Real production patterns from 5,263+ tests
-- **MC QA Tools** - QA workflows, issue taxonomy, severity rubrics
+Sourced from official Playwright docs, [`mxschmitt/awesome-playwright`](https://github.com/mxschmitt/awesome-playwright), and verified community patterns.
 
 ---
 
-## What This Provides
+## What's Here
 
-### For AI Agents
-A comprehensive skill (`/.claude/skills/playwrighter/SKILL.md`) that guides production-quality Playwright test generation with:
-- Mandatory patterns (locators, waits, assertions)
-- Anti-patterns to avoid
-- Quality scoring rubric
-- Test structure templates
+### For AI agents
+Multi-tool skill that loads patterns and enforces best practices when generating Playwright tests:
+- **Claude**, `.claude/skills/playwrighter/SKILL.md`
+- **Cursor**, `.cursor/rules/playwrighter.mdc`
+- **Windsurf**, `.windsurf/rules/playwrighter.md` + `/playwrighter` slash command
 
-### For Developers
-Reusable patterns, templates, and tools for building reliable E2E test suites that:
-- Pass consistently (no flaky tests)
-- Use accessible locators (better for users AND tests)
-- Follow enterprise best practices
-- Score 80+/100 on quality metrics
+### For developers
+- **23 pattern files** covering everything from locators to AI test agents
+- **8 ready-to-copy templates** (config, fixtures, auth setup, POMs, test scaffold, test plan, package.json)
+- **2 validation tools** (anti-pattern linter + quality scorecard)
+- **Research index** with primary-source citations from official docs + community
 
 ---
 
 ## Quick Start
 
-### For AI Agents
+### Read the patterns
+Start with `INDEX.md` for an overview, then drill into:
+- `patterns/locator-strategy.md`, accessible locators
+- `patterns/fixtures.md`, Playwright's killer feature
+- `patterns/anti-patterns.md`, what to avoid
 
-When asked to build Playwright tests:
-
-1. **Invoke the skill**: Read `/.claude/skills/playwrighter/SKILL.md`
-2. **Load patterns**: Read relevant files from `/patterns/`
-3. **Follow the workflow**: Explore → Plan → Build → Validate
-4. **Apply quality gates**: Score tests, ensure no anti-patterns
-
-### For Developers
-
+### Use the templates
 ```bash
-# Clone or reference this repo
-git clone /Users/wjia/Projects/playwrighter
+cp templates/playwright.config.ts your-project/
+cp templates/auth.setup.ts your-project/tests/
+cp templates/fixtures.ts your-project/tests/
+```
 
-# Copy patterns to your test project
-cp -r patterns/ your-project/qa-patterns/
-
-# Use templates
-cp templates/test-template.ts your-project/tests/
-
-# Reference best practices
-cat patterns/locator-strategy.md
+### Validate your suite
+```bash
+./tools/validate-suite.sh ./your-tests
+node tools/score-tests.js ./your-tests --threshold=80
 ```
 
 ---
@@ -60,162 +49,171 @@ cat patterns/locator-strategy.md
 
 ```
 playwrighter/
-├── .claude/skills/playwrighter/
-│   └── SKILL.md                    # AI agent skill definition
-├── patterns/
-│   ├── locator-strategy.md         # How to find elements (priority order)
-│   ├── waiting-timing.md           # Waits, timeouts, SPA handling
-│   ├── assertions.md               # Specific vs generic assertions
-│   ├── authentication.md           # Login strategies, session reuse
-│   └── test-structure.md           # Arrange-Act-Assert, test IDs
+├── .claude/skills/playwrighter/SKILL.md   # Claude skill (canonical body)
+├── .cursor/rules/playwrighter.mdc         # Cursor rule
+├── .windsurf/rules/playwrighter.md        # Windsurf rule
+├── .windsurf/workflows/playwrighter.md    # Windsurf /playwrighter slash command
+├── patterns/                              # 23 pattern files
+│   ├── locator-strategy.md
+│   ├── waiting-timing.md
+│   ├── assertions.md
+│   ├── anti-patterns.md
+│   ├── test-agents.md                     # 🎭 Planner/Generator/Healer
+│   ├── component-testing.md
+│   ├── eslint-and-linting.md
+│   ├── fixtures.md
+│   ├── page-object-model.md
+│   ├── test-structure.md
+│   ├── test-data.md                       # Faker, factories
+│   ├── authentication.md
+│   ├── oauth-mfa-sso.md                   # OAuth, TOTP, SAML
+│   ├── network-mocking.md
+│   ├── iframes-and-frames.md
+│   ├── mobile-responsive.md
+│   ├── visual-regression.md
+│   ├── accessibility.md                   # axe + guidepup
+│   ├── performance.md                     # Lighthouse, Web Vitals
+│   ├── api-testing.md
+│   ├── debugging-traces.md
+│   ├── ci-cd.md
+│   └── reporters.md                       # Allure, Slack, etc.
 ├── templates/
-│   ├── test-template.ts            # Standard test file template
-│   ├── test-plan-template.md      # Test planning template
-│   └── playwright.config.ts        # Recommended config
+│   ├── playwright.config.ts
+│   ├── test-template.ts
+│   ├── auth.setup.ts
+│   ├── fixtures.ts
+│   ├── package.json
+│   ├── test-plan-template.md
+│   └── pages/
+│       ├── login-page.ts
+│       └── dashboard-page.ts
 ├── tools/
-│   ├── validate-suite.sh           # Check for anti-patterns
-│   └── score-tests.js              # Quality scoring
+│   ├── validate-suite.sh                  # Anti-pattern linter
+│   └── score-tests.js                     # Quality scorecard
 ├── references/
-│   ├── quality-scorecard.md        # 100-point scoring rubric
-│   └── issue-taxonomy.md           # QA issue categorization
-└── README.md                       # This file
+│   ├── RESEARCH_INDEX.md                  # Round 1, core practices
+│   ├── RESEARCH_INDEX_R2.md               # Round 2, agents, components, ecosystem
+│   ├── quality-scorecard.md               # Rubric
+│   └── ADVERSARIAL_REVIEW_{1..4}.md       # Audit trail
+├── INDEX.md                               # Quick reference
+└── README.md                              # This file
 ```
 
 ---
 
 ## Core Principles
 
-### 1. Reliability Over Speed
-- Tests must be deterministic and repeatable
-- Zero false positives - tests only fail when genuinely broken
-- Explicit waits over fixed timeouts
-
-### 2. Accessibility-First Locators
-**Priority order**:
-1. `getByRole()` - HIGHEST (buttons, links, headings)
-2. `getByLabel()` - Form inputs
-3. `getByText()` - Visible text
-4. `getByTestId()` - Only when explicitly mentioned
-5. `locator()` - LAST RESORT
-
-### 3. Zero False Positives
-- Always assert expected results explicitly
-- Use specific assertions (`toBeVisible()`, not `.toBeTruthy()`)
-- One logical assertion per test
-
-### 4. Clean Test Structure
-- Arrange-Act-Assert pattern
-- Test IDs: `[TC-XXX] Description @Priority`
-- Group with `describe()`, setup with `beforeEach()`
+1. **Test user-visible behavior**, not implementation details
+2. **Use accessible locators**, `getByRole > getByLabel > getByText > getByTestId > CSS`
+3. **Web-first assertions**, `await expect(x).toBeVisible()` (auto-retries)
+4. **Fixtures over hooks**, encapsulate setup + teardown
+5. **No fixed waits**, never `waitForTimeout()` or `networkidle`
+6. **Test isolation**, each test gets a fresh context
+7. **Mock third-party services**, don't test what you don't control
 
 ---
 
 ## Anti-Patterns (NEVER)
 
-```typescript
-// ❌ NEVER: Fixed timeouts
-await page.waitForTimeout(5000);
+| ❌ | ✅ |
+|----|----|
+| `page.waitForTimeout(5000)` | `await expect(x).toBeVisible()` |
+| `page.waitForLoadState('networkidle')` | `domcontentloaded` + element wait |
+| `page.locator('.btn-primary')` | `page.getByRole('button', { name: 'Save' })` |
+| `expect(await x.isVisible()).toBe(true)` | `await expect(x).toBeVisible()` |
+| Test without assertion | Always `await expect(...)` after action |
+| `.toBeTruthy()` | Specific matcher (`toHaveCount`, `toHaveText`) |
 
-// ❌ NEVER: networkidle for SPAs
-await page.waitForLoadState('networkidle');
-
-// ❌ NEVER: Brittle CSS selectors
-await page.locator('div > ul > li:nth-child(3)').click();
-
-// ❌ NEVER: Missing assertions
-await page.getByRole('button').click();
-// Missing: await expect(page.getByText('Success')).toBeVisible();
-```
+See `patterns/anti-patterns.md` for the full list.
 
 ---
 
 ## Quality Gates
 
 Before tests are "done":
-- [ ] All tests pass consistently (3+ runs)
-- [ ] No `waitForTimeout()` or `networkidle`
-- [ ] Accessible locators used (role > label > text)
-- [ ] Assertions are specific and meaningful
+
+- [ ] All tests pass 3+ consecutive runs
+- [ ] No `waitForTimeout()` or `networkidle` (run `tools/validate-suite.sh`)
+- [ ] Accessible locators (codegen-verified)
+- [ ] Specific assertions only
 - [ ] Test isolation verified
-- [ ] Quality score ≥80/100 per test
-- [ ] README with setup instructions
+- [ ] Quality score ≥ 80/100 (run `tools/score-tests.js`)
+- [ ] README documents env vars + CI config
 
 ---
 
-## Integration
+## Requirements
 
-### Link to Existing Projects
+- **Node.js** ≥ 18
+- **`@playwright/test`** ≥ 1.40 (templates use modern features)
+- For accessibility patterns: **`@axe-core/playwright`** ≥ 4.10
 
-```bash
-# In your test project
-ln -s /Users/wjia/Projects/playwrighter/.claude/skills/playwrighter \
-      .claude/skills/playwrighter
-
-# Or copy patterns
-cp -r /Users/wjia/Projects/playwrighter/patterns \
-      your-project/qa-patterns
-```
-
-### Reference in CLAUDE.md
-
-```markdown
-## QA Automation
-
-This project uses Playwrighter best practices.
-See: /Users/wjia/Projects/playwrighter/patterns/
-```
+See `templates/package.json` for a full dependency manifest.
 
 ---
 
 ## Sources
 
-### QualityForge
-- `/Users/wjia/Projects/qe-suite/qualityforge/playwright/PLAYWRIGHT-BEST-PRACTICES.md`
-- 802 lines of Playwright best practices
-- Test generation patterns
-- Validation and scoring
-
-### Mailchimp
-- `/Users/wjia/Projects/mailchimp-r-and-a-qa-suite/`
-- 5,263+ production tests
-- SPA navigation patterns (verified: networkidle = 100% timeout)
-- Page Object Models
-
-### MC QA Tools
-- `/Users/wjia/Projects/mc-qa-tools/`
-- QA workflows and rubrics
-- Issue taxonomy and severity levels
-- Login strategies
+All patterns trace to primary sources:
+- [Playwright Official Docs](https://playwright.dev)
+- [`mxschmitt/awesome-playwright`](https://github.com/mxschmitt/awesome-playwright)
+- See `references/RESEARCH_INDEX.md` for the full index
 
 ---
 
-## Evidence-Based Patterns
+## Integration
 
-All patterns are backed by evidence:
+The skill ships with invocation files for **Claude, Cursor, and Windsurf**. All three point at the same canonical body (`.claude/skills/playwrighter/SKILL.md`) and pattern files, pick whichever path your AI tool uses.
 
-**SPA Navigation** (Mailchimp):
-- 5,263 tests using `networkidle` → 100% timeout rate
-- Same tests using `domcontentloaded` + element wait → 98.4% pass rate
+### Claude Code / Claude Desktop
+Symlink the skill folder:
+```bash
+ln -s "$(pwd)/playwrighter/.claude/skills/playwrighter" \
+      <your-project>/.claude/skills/playwrighter
+```
+Or per-user (global):
+```bash
+ln -s "$(pwd)/playwrighter/.claude/skills/playwrighter" \
+      ~/.claude/skills/playwrighter
+```
+Claude auto-loads `SKILL.md` when its `description` field matches the user's request.
 
-**Accessible Locators** (QualityForge + Mailchimp):
-- 127+ Mailchimp test files use `getByRole()` as primary locator
-- Verified across production codebases
+### Cursor
+Symlink the rule:
+```bash
+mkdir -p <your-project>/.cursor/rules
+ln -s "$(pwd)/playwrighter/.cursor/rules/playwrighter.mdc" \
+      <your-project>/.cursor/rules/playwrighter.mdc
+```
+Or per-user:
+```bash
+ln -s "$(pwd)/playwrighter/.cursor/rules/playwrighter.mdc" \
+      ~/.cursor/rules/playwrighter.mdc
+```
+Triggers via globs (`*.spec.ts`, `playwright.config.ts`, `tests/**/*.ts`) or model decision.
 
-**Quality Scoring** (QualityForge):
-- 100-point rubric across 5 categories
-- Gates: 70+ for merge, 80+ for production
+### Windsurf
+Symlink the rule + workflow:
+```bash
+mkdir -p <your-project>/.windsurf/{rules,workflows}
+ln -s "$(pwd)/playwrighter/.windsurf/rules/playwrighter.md" \
+      <your-project>/.windsurf/rules/playwrighter.md
+ln -s "$(pwd)/playwrighter/.windsurf/workflows/playwrighter.md" \
+      <your-project>/.windsurf/workflows/playwrighter.md
+```
+Triggers as a model-decision rule, or via the `/playwrighter` slash command.
+
+### Reference patterns in your project's AI rules
+```markdown
+## QA Automation Patterns
+See: <path-to-playwrighter>/patterns/
+```
+
+### Verify
+After symlinking, ask your AI tool: *"Write a Playwright test for the login flow."* It should read the canonical `SKILL.md` and the relevant pattern files before producing tests.
 
 ---
 
-## Next Steps
-
-1. **Read the skill**: `/.claude/skills/playwrighter/SKILL.md`
-2. **Browse patterns**: `/patterns/*.md`
-3. **Apply to your project**: Use templates and validation tools
-4. **Score your tests**: Target 80+/100
-
----
-
-**Version**: 1.0.0
-**Last Updated**: 2026-05-14
-**Maintained**: This is a reference project, patterns are stable
+**Version**: 3.0.0
+**Updated**: 2026-05-14
+**Maintained**: Patterns are stable; updated when official Playwright guidance changes.
