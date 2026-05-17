@@ -214,6 +214,15 @@ After symlinking, ask your AI tool: *"Write a Playwright test for the login flow
 
 ---
 
+## Related portfolio repos
+
+- **`weijia-89/vibe-check`**: scanner that surfaces hallucinated APIs and other LLM-tell patterns in PR diffs. Run any AI-generated test diff through `vibe-check` before merge.
+- **`weijia-89/palamedes`**: rigorous-research skill plus multi-agent synthesis prompt. Same evidence-discipline shape applied to research output rather than test code.
+- **`weijia-89/trainer.skill`**: routing skill for an 8-specialist agent toolkit. Loads this repo's patterns when the agent encounters Playwright trigger files (`*.spec.ts`, `playwright.config.ts`, etc.).
+- **`weijia-89/northwind-qa`**: a 50-test Playwright suite that uses these patterns end-to-end. Worked example, not just a reference.
+
+---
+
 **Version**: 3.0.0
 **Updated**: 2026-05-14
 **Maintained**: Patterns are stable; updated when official Playwright guidance changes.
