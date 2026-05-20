@@ -1,0 +1,49 @@
+name: dogfood — score northwind-qa
+
+# Meta-validation: every push to playwrighter runs tools/score-tests.js
+# against the worked-example suite at weijia-89/northwind-qa. If a rubric
+# change drops the dogfood suite below the 80 threshold, this fails so the
+# change can be reconciled before merge. The score is the contract.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  score-dogfood:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out playwrighter
+        uses: actions/checkout@v4
+        with:
+          path: playwrighter
+
+      - name: Check out northwind-qa (the worked example)
+        uses: actions/checkout@v4
+        with:
+          repository: weijia-89/northwind-qa
+          path: northwind-qa
+          ref: main
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Score northwind-qa suite against playwrighter rubric
+        run: |
+          node playwrighter/tools/score-tests.js northwind-qa/tests/ --threshold=80
+
+      - name: Surface scores as a comment-friendly summary
+        if: always()
+        run: |
+          {
+            echo "## playwrighter dogfood — northwind-qa scorecard"
+            echo ""
+            echo '```'
+            node playwrighter/tools/score-tests.js northwind-qa/tests/ --threshold=80 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -128,6 +128,23 @@ Before tests are "done":
 
 ---
 
+## Worked example
+
+[`weijia-89/northwind-qa`](https://github.com/weijia-89/northwind-qa) is the suite I built to dogfood playwrighter end-to-end. It's a 51-test Playwright run against a React 19 + Vite e-commerce SUT ([`example-e-commerce-website`](https://github.com/weijia-89/example-e-commerce-website)) that exercises the patterns under load: accessible-locator-first throughout, fixtures over hooks, web-first assertions, no fixed waits anywhere in the suite. Seven of those 51 tests are regression guards against bugs the suite caught while being written, filed under `bugs/` with reproduction steps.
+
+The scorer's verdict on the suite:
+
+```
+$ git clone https://github.com/weijia-89/northwind-qa
+$ node playwrighter/tools/score-tests.js northwind-qa/tests/ --threshold=80
+Average: 91.4/100
+Files below threshold: 0/10
+```
+
+If you want to see a suite that takes playwrighter's rubric seriously, that's the read. If you want to see how the patterns translate into real tests, the suite's `tests/cart.spec.ts` (storage-shape regression guards), `tests/auth.spec.ts` (storage-state setup project), and `tests/a11y.spec.ts` (axe sweep across routes) are the highest-leverage starting points.
+
+---
+
 ## Requirements
 
 - **Node.js** ≥ 18
@@ -204,7 +221,7 @@ After symlinking, ask your AI tool: *"Write a Playwright test for the login flow
 
 playwrighter sits in a portfolio of QA-for-AI work. The two repos that pair most directly:
 
-- **[`weijia-89/northwind-qa`](https://github.com/weijia-89/northwind-qa)**: a 50-test Playwright suite that uses playwrighter's patterns end-to-end against a React 19 SUT and ships seven real bug reports with regression-test guards. The worked example, not just a reference.
+- **[`weijia-89/northwind-qa`](https://github.com/weijia-89/northwind-qa)**: a 51-test Playwright suite that uses playwrighter's patterns end-to-end against a React 19 SUT and ships seven real bug reports with regression-test guards. The worked example, not just a reference.
 - **[`weijia-89/vibe-check`](https://github.com/weijia-89/vibe-check)**: a reviewer evidence surfacer for PRs that may contain LLM-generated code. Pair it with playwrighter on QA work, where patterns shape the test and the scanner flags AI-tells in the diff.
 
 Three more in the same ethos:
