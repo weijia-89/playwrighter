@@ -1,6 +1,6 @@
 # playwrighter
 
-I built playwrighter as a Playwright pattern library plus a working test-quality scorer, so an AI agent or a human writing E2E tests has both the patterns to follow and an automated way to check whether the suite actually follows them. The patterns (23 of them under `patterns/`) come from Playwright's official docs, from mxschmitt/awesome-playwright, and from conventions I verified across community projects. The scorer at `tools/score-tests.js` reads a directory of `.spec.ts` files and grades them against a rubric that mirrors the patterns, so every anti-pattern documented in `patterns/anti-patterns.md` has a corresponding penalty in the scorer, from `waitForTimeout` calls down through CSS-selector locators where an accessible role would do better. The repo also ships 8 ready-to-copy templates under `templates/` (config, fixtures, auth setup, POMs, package.json) and a second validation tool, `tools/validate-suite.sh`, for the anti-pattern linter pass.
+I built playwrighter as a Playwright pattern library plus a working test-quality scorer, so an AI agent or a human writing E2E tests has both the patterns to follow and an automated way to check whether the suite actually follows them. The patterns (23 of them under `patterns/`) come from Playwright's official docs, from mxschmitt/awesome-playwright, and from conventions I verified across community projects. The scorer at `tools/score-tests.js` reads a directory of `.spec.ts` files and grades them against a rubric aligned with the patterns: it penalizes the syntactic flake and locator issues the anti-patterns doc emphasizes (for example `waitForTimeout` and CSS class or id selectors inside `.locator()`). Additional rows in `patterns/anti-patterns.md` are covered by `tools/validate-suite.sh` or by review, not by every line having an automatic score penalty. The repo also ships 8 ready-to-copy templates under `templates/` (config, fixtures, auth setup, POMs, package.json) and that validate-suite linter pass.
 
 The skill ships as a multi-tool bundle pointing at the same canonical body. Claude loads `.claude/skills/playwrighter/SKILL.md`, Cursor loads `.cursor/rules/playwrighter.mdc`, and Windsurf loads `.windsurf/rules/playwrighter.md` plus a `/playwrighter` slash command. For human readers, `INDEX.md` is the entry point.
 
@@ -23,11 +23,11 @@ Start reading from `INDEX.md` for the topic map, then drill into `patterns/locat
 
 ## Why a pattern library plus a scorer
 
-A pattern library on its own is documentation, and documentation gets read once and then ignored when the agent or the engineer is moving fast. The discipline I wanted was the suite-quality bar that catches the regression at PR time, so I wrote the scorer to mirror the patterns directly. A `waitForTimeout(N)` call costs 8 points in the rubric, the same penalty for a `networkidle` wait, while a CSS-selector locator like `.btn-primary` costs 6 points, and the `expect(await x.isVisible()).toBe(true)` shape instead of `await expect(x).toBeVisible()` costs 5. The full rubric scores out of 100 and the default CI threshold is 80.
+A pattern library on its own is documentation, and documentation gets read once and then ignored when the agent or the engineer is moving fast. The discipline I wanted was the suite-quality bar that catches the regression at PR time, so I wrote the scorer to mirror the patterns directly. A `waitForTimeout()` call costs 10 points, the same penalty as `networkidle`; a CSS class or id inside `.locator('.btn-primary')` costs 2 points per match (cap 10); the `expect(await x.isVisible())` shape instead of `await expect(x).toBeVisible()` costs 5. The full penalty tables live in the comment block at the top of `tools/score-tests.js`. The rubric scores out of 100 and the default CI threshold is 80.
 
 The scorer is intentionally regex-and-AST simple. It can't tell whether your test is meaningfully testing the right thing, and it doesn't catch the semantic anti-patterns that show up in code review (assertions that don't really constrain behavior, test names that misrepresent what the body asserts). What it does catch is the syntactic decay that creeps into a suite over time, from the flake-fix that introduced a `waitForTimeout` to the quick-locator shortcut that landed a CSS selector instead of an accessible role. Those are the regressions a code reviewer also misses when the diff is large and the time is short, and the scorer fails CI before the reviewer has to find them.
 
-The 23 pattern files are the source the scorer's rules trace to. If the scorer penalizes `getByText` over `getByRole`, `patterns/locator-strategy.md` walks through why accessible roles are more stable than visible text. If it penalizes `waitForTimeout`, `patterns/waiting-timing.md` explains the auto-waiting mechanism that makes fixed waits the wrong abstraction. The library and the scorer share a vocabulary, so a contributor or an AI agent reading the SKILL ends up writing tests that pass the scorer because the patterns and the rubric are the same artifact.
+The 23 pattern files are where the scorer's rules trace back to. The scorer penalizes CSS selectors inside `.locator()` and the flake patterns in `patterns/anti-patterns.md`; `patterns/locator-strategy.md` explains why `getByRole` beats CSS, and `patterns/waiting-timing.md` explains why fixed waits are the wrong abstraction. Fixtures, `test.step()`, and per-test length are guidance in the pattern docs and in `tools/validate-suite.sh`, not automatic score penalties. The library and the scorer share a vocabulary on what they do measure, so a contributor or an AI agent reading the SKILL can write tests that pass the scorer for the syntactic bar it enforces.
 
 ---
 
@@ -75,12 +75,7 @@ playwrighter/
 │       └── dashboard-page.ts
 ├── tools/
 │   ├── validate-suite.sh                  # Anti-pattern linter
-│   └── score-tests.js                     # Quality scorecard
-├── references/
-│   ├── RESEARCH_INDEX.md                  # Round 1, core practices
-│   ├── RESEARCH_INDEX_R2.md               # Round 2, agents, components, ecosystem
-│   ├── quality-scorecard.md               # Rubric
-│   └── ADVERSARIAL_REVIEW_{1..4}.md       # Audit trail
+│   └── score-tests.js                     # Quality scorecard (inline rubric)
 ├── INDEX.md                               # Quick reference
 └── README.md                              # This file
 ```
@@ -160,7 +155,6 @@ See `templates/package.json` for a full dependency manifest.
 All patterns trace to primary sources:
 - [Playwright Official Docs](https://playwright.dev)
 - [`mxschmitt/awesome-playwright`](https://github.com/mxschmitt/awesome-playwright)
-- See `references/RESEARCH_INDEX.md` for the full index
 
 ---
 

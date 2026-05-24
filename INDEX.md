@@ -76,20 +76,6 @@
 
 ---
 
-## References
-
-| File | Purpose |
-|------|---------|
-| `references/RESEARCH_INDEX.md` | Round 1 research (core practices) |
-| `references/RESEARCH_INDEX_R2.md` | Round 2 research (agents, components, ecosystem) |
-| `references/quality-scorecard.md` | Rubric definitions matching `score-tests.js` |
-| `references/ADVERSARIAL_REVIEW_1.md` | Pre-fix audit (Round 1) |
-| `references/ADVERSARIAL_REVIEW_2.md` | Post-fix audit (Round 1) |
-| `references/ADVERSARIAL_REVIEW_3.md` | Discovered Round 1 gaps |
-| `references/ADVERSARIAL_REVIEW_4.md` | Final audit |
-
----
-
 ## Quick Patterns
 
 ### Locators (Priority Order)
@@ -183,7 +169,7 @@ expect(...).toBeTruthy();                                 // generic
 | Execution | 15% |
 | Coverage | 15% |
 
-See `references/quality-scorecard.md` for the full rubric.
+See the rubric comment block in `tools/score-tests.js` for penalty tables, thresholds, and limitations (canonical; matches `scoreFile()`).
 
 ---
 
@@ -225,8 +211,7 @@ playwrighter/
 ├── .claude/skills/playwrighter/SKILL.md
 ├── patterns/                  # 23 pattern files
 ├── templates/                 # 8 ready-to-copy templates
-├── tools/                     # 2 validation scripts
-├── references/                # Research + audits + rubrics
+├── tools/                     # validate-suite.sh + score-tests.js (inline rubric)
 ├── INDEX.md                   # This file
 └── README.md                  # Entry point
 ```

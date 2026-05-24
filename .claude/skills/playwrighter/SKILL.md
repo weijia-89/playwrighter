@@ -149,5 +149,4 @@ Before saying "done":
 ## References
 
 - Official: https://playwright.dev/docs/best-practices
-- Curated index: `references/RESEARCH_INDEX.md`
-- Quality rubric: `references/quality-scorecard.md`
+- Quality rubric: inline comment block in `tools/score-tests.js`

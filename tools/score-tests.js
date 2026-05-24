@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * score-tests.js — Score Playwright test files against the quality rubric.
+ * Rubric definitions live in the comment block below (canonical source).
  *
  * Usage:
  *   node tools/score-tests.js [path]       # default ./tests
@@ -30,13 +31,44 @@ if (!fs.existsSync(target)) {
   process.exit(2);
 }
 
-// --- Rubric (100 points total) ---
+// --- Rubric (100 points total; ground truth = scoreFile() below) ---
 //
-// Completeness (25): test ID format, has assertions, has describe/group
-// Reliability (25): no waitForTimeout, no networkidle, no manual isVisible
-// Maintainability (20): uses fixtures, accessible locators, no nth-child
-// Execution (15): reasonable file size, has test.step or single concern
-// Coverage (15): has tags (@P0/@smoke), descriptive name
+// Categories (weights):
+//   Reliability 25 | Maintainability 20 | Completeness 25 | Coverage 15 | Execution 15
+//
+// Reliability (25 max) — flaky / non–web-first patterns
+//   -10  waitForTimeout()
+//   -10  waitForLoadState('networkidle')
+//    -5  expect(await x.isVisible()) (manual assertion shape)
+//    -5  .toBeTruthy() or .toBeFalsy()
+//    -5  page.pause() left in code
+//    -3  test.only() left in code
+//    -3  if (await ...) conditional (split tests instead)
+//    -2  { force: true } (bypasses actionability)
+//
+// Maintainability (20 max) — locator stability
+//    -2 per CSS class/id inside .locator('…') (cap -10 total)
+//    -5  nth-child() / nth-of-type()
+//    -5  xpath= selector
+//   (Not scored here: custom fixtures, getByRole vs getByText — see patterns/ + validate-suite.sh)
+//
+// Completeness (25 max) — traceability and assertions
+//    -3 per test missing [TC-XXX] in title (cap -10)
+//   -15  no expect() in file
+//    -5  fewer expect() calls than test() calls
+//
+// Coverage (15 max) — tags for triage / CI filters
+//    -5  no @P0–@P3 priority tag in file
+//    -5  no @smoke / @regression / @critical / @a11y category tag in file
+//
+// Execution (15 max) — file size
+//    -5  file > 400 lines (consider splitting)
+//   (Not scored here: per-test >100 lines, test.step() — manual review / patterns/test-structure.md)
+//
+// Thresholds (CLI default --threshold=80): 70+ feature branch, 80+ main, 90+ production, 95+ exemplary.
+//
+// Limitations: regex/AST surface checks only — not test value, behavior coverage, data quality,
+// locator stability over time, or failure debuggability. Pair with code review.
 
 function findTestFiles(dir) {
   const files = [];
@@ -77,9 +109,9 @@ function scoreFile(filePath) {
     score -= 5;
     findings.push({ severity: 'error', msg: 'manual isVisible() detected' });
   }
-  if (/\.toBeTruthy\(\)/.test(content)) {
+  if (/\.toBeTruthy\(\)|\.toBeFalsy\(\)/.test(content)) {
     score -= 5;
-    findings.push({ severity: 'error', msg: '.toBeTruthy() detected' });
+    findings.push({ severity: 'error', msg: '.toBeTruthy() / .toBeFalsy() detected' });
   }
   if (/test\.only\(/.test(content)) {
     score -= 3;
@@ -147,12 +179,18 @@ function scoreFile(filePath) {
   }
 
   // --- Coverage (-15 max) ---
-  const tagMatches = (content.match(/@(P[0-3]|smoke|regression|critical|a11y)/g) || []).length;
-  if (testCount > 0 && tagMatches === 0) {
+  if (testCount > 0 && !/@P[0-3]/.test(content)) {
     score -= 5;
     findings.push({
       severity: 'warning',
-      msg: 'no priority/category tags (@P0, @smoke, etc.)',
+      msg: 'no priority tag (@P0–@P3)',
+    });
+  }
+  if (testCount > 0 && !/@(smoke|regression|critical|a11y)/.test(content)) {
+    score -= 5;
+    findings.push({
+      severity: 'warning',
+      msg: 'no category tag (@smoke, @regression, @critical, @a11y)',
     });
   }
 
