@@ -7,48 +7,59 @@ playwrighter is a **documentation + scaffolding + lint/score harness** for Playw
 ## System context
 
 ```mermaid
-flowchart TB
+flowchart TD
   subgraph actors [Actors]
+    direction TB
     Human[Human engineer]
     Agent[AI agent Cursor / CLI / other]
   end
 
   subgraph playwrighter [playwrighter repo]
+    direction TB
+    Index["INDEX.md / README.md"]
     Rule[".cursor/rules/playwrighter.mdc"]
     Skill["skill/SKILL.md"]
     Patterns["patterns/ 23 topic files"]
     Templates["templates/ bootstrap kit"]
     Tools["tools/ validate + score"]
-    Index["INDEX.md / README.md"]
+    Rule --> Skill
+    Skill --> Patterns
+    Skill --> Templates
   end
 
   subgraph consumer [Consumer test project]
-    Specs["*.spec.ts suite"]
+    direction TB
+    TemplatesOut["templates/ copied in"]
+    CopiedTools["tools/ copied from playwrighter"]
     Config["playwright.config.ts"]
     Fix["fixtures.ts + POMs"]
-    CopiedTools["tools/ copied from playwrighter"]
+    Specs["*.spec.ts suite"]
+    TemplatesOut --> Config
+    CopiedTools --> Specs
+    Fix --> Specs
   end
 
   subgraph external [External validation]
-    SUT[Application under test]
-    NW["northwind-qa dogfood suite"]
+    direction TB
     GHA["GitHub Actions dogfood workflow"]
+    NW["northwind-qa dogfood suite"]
+    SUT[Application under test]
+    GHA --> NW
+    NW --> SUT
   end
 
   Human --> Index
   Human --> Templates
   Agent --> Rule
-  Rule --> Skill
-  Skill --> Patterns
-  Skill --> Templates
   Agent --> Patterns
-  Templates --> consumer
+  Templates --> TemplatesOut
   Tools --> CopiedTools
-  CopiedTools --> Specs
   Specs --> SUT
-  GHA --> Tools
-  GHA --> NW
-  NW --> SUT
+  Tools --> GHA
+
+  actors --> playwrighter
+  playwrighter --> consumer
+  consumer --> external
 ```
 
 ---

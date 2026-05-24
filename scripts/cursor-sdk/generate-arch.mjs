@@ -25,7 +25,7 @@ Read these files (full or enough to be accurate):
 Write or overwrite ${archPath} with:
 1. Short prose: what playwrighter is (pattern library + templates + lint/score; not an app test suite in-repo).
 2. At least four Mermaid diagrams:
-   - System context (actors, playwrighter layers, consumer project, external northwind-qa CI)
+   - System context: flowchart TD with subgraphs stacked vertically (actors → playwrighter → consumer → external); direction TB inside each subgraph; chain subgraphs with actors --> playwrighter --> consumer --> external
    - In-repo layer flow (mdc → skill → patterns → templates → tools)
    - Agent sequence (rule → skill → patterns → write → validate → score)
    - Enforcement split (validate-suite.sh vs score-tests.js; errors vs warnings)
