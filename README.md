@@ -75,12 +75,7 @@ playwrighter/
 │       └── dashboard-page.ts
 ├── tools/
 │   ├── validate-suite.sh                  # Anti-pattern linter
-│   └── score-tests.js                     # Quality scorecard
-├── references/
-│   ├── RESEARCH_INDEX.md                  # Round 1, core practices
-│   ├── RESEARCH_INDEX_R2.md               # Round 2, agents, components, ecosystem
-│   ├── quality-scorecard.md               # Rubric
-│   └── ADVERSARIAL_REVIEW_{1..4}.md       # Audit trail
+│   └── score-tests.js                     # Quality scorecard (inline rubric)
 ├── INDEX.md                               # Quick reference
 └── README.md                              # This file
 ```
@@ -160,7 +155,6 @@ See `templates/package.json` for a full dependency manifest.
 All patterns trace to primary sources:
 - [Playwright Official Docs](https://playwright.dev)
 - [`mxschmitt/awesome-playwright`](https://github.com/mxschmitt/awesome-playwright)
-- See `references/RESEARCH_INDEX.md` for the full index
 
 ---
 

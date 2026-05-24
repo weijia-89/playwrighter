@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * score-tests.js — Score Playwright test files against the quality rubric.
+ * Rubric definitions live in the comment block below (canonical source).
  *
  * Usage:
  *   node tools/score-tests.js [path]       # default ./tests
