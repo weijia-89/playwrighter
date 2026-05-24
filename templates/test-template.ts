@@ -37,7 +37,7 @@ test.describe('Feature: User Authentication', () => {
     await loginPage.login('user@example.com', 'wrong-password');
 
     // Assert
-    await loginPage.expectError(/invalid/i);
+    await expect(loginPage.errorMessageLocator()).toContainText(/invalid/i);
   });
 
   test('[TC-003] Logout returns to login page @P1', async ({

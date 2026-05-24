@@ -18,8 +18,8 @@
     "lint": "eslint tests/",
     "lint:fix": "eslint tests/ --fix",
     "typecheck": "tsc --noEmit",
-    "validate": "./tools/validate-suite.sh ./tests && npm run lint && npm run typecheck",
-    "score": "node ./tools/score-tests.js ./tests --threshold=80",
+    "validate": "node scripts/check-tools.js && ./tools/validate-suite.sh ./tests && npm run lint && npm run typecheck",
+    "score": "node scripts/check-tools.js && node ./tools/score-tests.js ./tests --threshold=80",
     "install:browsers": "playwright install chromium --with-deps"
   },
   "devDependencies": {

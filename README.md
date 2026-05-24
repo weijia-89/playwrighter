@@ -141,7 +141,7 @@ If you want to see a suite that takes playwrighter's rubric seriously, that's th
 ## Requirements
 
 - **Node.js** ≥ 18
-- **`@playwright/test`** ≥ 1.40 (templates use modern features)
+- **`@playwright/test`** ≥ 1.50 (templates and Test Agents patterns; see `templates/package.json`)
 - For accessibility patterns: **`@axe-core/playwright`** ≥ 4.10
 
 See `templates/package.json` for a full dependency manifest.
@@ -161,26 +161,36 @@ All patterns trace to primary sources:
 Canonical skill body: **`skill/SKILL.md`** at the playwrighter repo root. Patterns and tools live alongside it in the same checkout.
 
 ### Cursor
-Symlink the rule into your project or user rules:
+
+**From inside the playwrighter repo** (`pwd` is the clone root):
+```bash
+mkdir -p ~/.cursor/rules
+ln -sf "$(pwd)/.cursor/rules/playwrighter.mdc" ~/.cursor/rules/playwrighter.mdc
+```
+
+**From a parent monorepo** (playwrighter is a subfolder):
 ```bash
 mkdir -p <your-project>/.cursor/rules
 ln -sf "$(pwd)/playwrighter/.cursor/rules/playwrighter.mdc" \
       <your-project>/.cursor/rules/playwrighter.mdc
 ```
-Or per-user:
-```bash
-ln -sf "$(pwd)/playwrighter/.cursor/rules/playwrighter.mdc" \
-      ~/.cursor/rules/playwrighter.mdc
-```
-Triggers via globs (`*.spec.ts`, `playwright.config.ts`, `tests/**/*.ts`) or model decision. The rule instructs the agent to read `skill/SKILL.md` first.
+
+Triggers via globs (`*.spec.ts`, `playwright.config.ts`, `fixtures.ts`, `pages/**/*.ts`, etc.) or model decision. The rule instructs the agent to read `skill/SKILL.md` first (repo-root paths; vendored installs use a `playwrighter/` prefix).
 
 ### Other agents (skills.sh, Windsurf, CLI tools with a skills directory)
-Symlink the canonical skill file into your agent's skill directory (adjust paths to your tool):
+
+**From playwrighter repo root:**
 ```bash
 mkdir -p ~/.your-agent/skills/playwrighter
+ln -sf "$(pwd)/skill/SKILL.md" ~/.your-agent/skills/playwrighter/SKILL.md
+```
+
+**From parent monorepo:**
+```bash
 ln -sf "$(pwd)/playwrighter/skill/SKILL.md" ~/.your-agent/skills/playwrighter/SKILL.md
 ```
-Keep the full playwrighter repo checkout available so `patterns/` and `tools/` resolve.
+
+Keep the full playwrighter checkout available so `patterns/` and `tools/` resolve.
 
 ### Reference patterns in your project's AI rules
 ```markdown

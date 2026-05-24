@@ -42,11 +42,10 @@ export class LoginPage {
     await this.passwordInput.fill(password);
     await this.submitButton.click();
   }
-
-  async expectError(text: string) {
-    await expect(this.errorMessage).toContainText(text);
-  }
 }
+
+// In the spec file (not the POM):
+// await expect(loginPage.errorMessage).toContainText('Invalid credentials');
 ```
 
 ---

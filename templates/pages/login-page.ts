@@ -33,7 +33,8 @@ export class LoginPage {
     await this.submitButton.click();
   }
 
-  async expectError(text: string | RegExp) {
-    await expect(this.errorMessage).toContainText(text);
+  /** Locator for invalid-login error text — assert in the spec, not here. */
+  errorMessageLocator(): Locator {
+    return this.errorMessage;
   }
 }

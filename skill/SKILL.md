@@ -28,7 +28,7 @@ Invoke when the user asks to:
 1. **Read patterns FIRST**, never write tests without consulting the relevant pattern files
 2. **Use codegen for locators**, `npx playwright codegen <url>` over hand-written CSS
 3. **Apply templates**, start from `templates/`, don't build from scratch
-4. **Validate before declaring done**, run `tools/validate-suite.sh` and `tools/score-tests.js`
+4. **Validate before declaring done**, run `tools/validate-suite.sh` and `tools/score-tests.js` (copy `tools/` from this repo into consumer projects; see `templates/README.md`)
 
 ---
 

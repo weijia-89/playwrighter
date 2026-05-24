@@ -7,24 +7,28 @@ Copy these into a fresh test project. Order matters.
 ## Order of Operations
 
 1. **`package.json`**, install dependencies first
-2. **`playwright.config.ts`**, Playwright config (references `playwright/.auth/`)
-3. **`pages/login-page.ts`** + **`pages/dashboard-page.ts`**, POMs
-4. **`fixtures.ts`**, custom test fixtures (imports POMs from step 3)
-5. **`auth.setup.ts`**, auth setup project (referenced in config)
-6. **`test-template.ts`**, template for new test specs
-7. **`test-plan-template.md`**, for planning new test suites
+2. **Copy `tools/`** from the playwrighter repo into your project root (`validate-suite.sh`, `score-tests.js`)
+3. **`playwright.config.ts`**, Playwright config (references `playwright/.auth/`)
+4. **`pages/login-page.ts`** + **`pages/dashboard-page.ts`**, POMs
+5. **`fixtures.ts`**, custom test fixtures (imports POMs from step 4)
+6. **`auth.setup.ts`**, auth setup project (referenced in config)
+7. **`test-template.ts`**, template for new test specs
+8. **`test-plan-template.md`**, for planning new test suites
 
 ---
 
 ## Quick Setup
 
 ```bash
-# 1. Copy templates to your project
+# 1. Copy templates + quality tools to your project
 cp templates/package.json your-project/package.json
+cp -r templates/scripts your-project/scripts
 cp templates/playwright.config.ts your-project/
 cp -r templates/pages your-project/tests/
 cp templates/fixtures.ts your-project/tests/
 cp templates/auth.setup.ts your-project/tests/
+cp -r /path/to/playwrighter/tools your-project/tools
+chmod +x your-project/tools/validate-suite.sh
 
 # 2. Install
 cd your-project
