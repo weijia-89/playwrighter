@@ -108,6 +108,40 @@ See `patterns/anti-patterns.md` for the full list.
 
 ---
 
+## Enforcement map
+
+Not every row in `patterns/anti-patterns.md` is automated. Two CLI tools split responsibility; semantic gaps (test intent, data quality, network/auth strategy) stay in code review. See [`ARCH.MD` § Enforcement pipeline](ARCH.MD#enforcement-pipeline) for the diagram.
+
+| Anti-pattern | `validate-suite.sh` | `score-tests.js` | Review / ESLint only |
+|--------------|---------------------|------------------|----------------------|
+| `waitForTimeout()` | Error | −10 | `eslint-plugin-playwright` |
+| `waitForLoadState('networkidle')` | Error | −10 | ESLint |
+| `expect(await x.isVisible())` | Error | −5 | ESLint (`prefer-web-first-assertions`) |
+| `expect(await x.textContent())` | Error | — | ESLint |
+| `.toBeTruthy()` / `.toBeFalsy()` | Error (truthy only) | −5 (both) | — |
+| `test.only()` | Error | −3 | ESLint + `forbidOnly` on CI |
+| `page.pause()` | Error | −5 | ESLint |
+| `if (await …)` branching | Warning | −3 | ESLint (`no-conditional-in-test`) |
+| `{ force: true }` | Warning | −2 | ESLint (warn) |
+| CSS class/id in `.locator('…')` | Warning (class in string) | −2 each (cap −10) | — |
+| `nth-child()` / `nth-of-type()` | Warning | −5 | — |
+| `xpath=` selector | Warning | −5 | — |
+| `page.$()` (deprecated) | Warning | — | ESLint |
+| `page.click('text=…')` | Warning | — | — |
+| `setTimeout()` in tests | Warning | — | — |
+| Spec imports `@playwright/test` not `./fixtures` | — | −5 | `patterns/fixtures.md` |
+| Missing `[TC-XXX]` in test title | — | −3 each (cap −10) | — |
+| No `expect()` / fewer expects than tests | — | −15 / −5 | ESLint (`expect-expect`) |
+| Missing `@P0`–`@P3` priority tag | — | −5 | — |
+| Missing `@smoke` / `@regression` / `@critical` / `@a11y` | — | −5 | — |
+| File > 400 lines | — | −5 | `patterns/test-structure.md` |
+| POM holds test assertions | — | — | `patterns/page-object-model.md` |
+| Auth, network mocking, CI sharding, visual baselines | — | — | respective `patterns/*.md` |
+
+**Grep spot-check (2026-05-24):** rows above match `check_error` / `check_warning` in `tools/validate-suite.sh` and the rubric comment + `scoreFile()` in `tools/score-tests.js`. Warnings in validate-suite do not fail CI unless you pass `--strict`.
+
+---
+
 ## Quality Gates
 
 Before tests are "done":
