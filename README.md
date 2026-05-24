@@ -35,10 +35,7 @@ The 23 pattern files are where the scorer's rules trace back to. The scorer pena
 
 ```
 playwrighter/
-├── .claude/skills/playwrighter/SKILL.md   # Claude skill (canonical body)
 ├── .cursor/rules/playwrighter.mdc         # Cursor rule
-├── .windsurf/rules/playwrighter.md        # Windsurf rule
-├── .windsurf/workflows/playwrighter.md    # Windsurf /playwrighter slash command
 ├── patterns/                              # 23 pattern files
 │   ├── locator-strategy.md
 │   ├── waiting-timing.md
