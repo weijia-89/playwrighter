@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Consumer bootstrap section in `templates/README.md` (templates → `tools/` → `npm run validate` / `score`); README enforcement map aligned with `validate-suite.sh` and `score-tests.js`.
+
 ## [3.1.1] - 2026-05-24
 
 ### Fixed
