@@ -13,11 +13,13 @@ Optional automation for the playwrighter adversarial-review fixes (3.1.1). The f
 cd scripts/cursor-sdk
 npm install
 export CURSOR_API_KEY=your_key
-npm run apply-fixes
+npm run apply-fixes      # harness fixes (3.1.1 checklist)
+npm run generate-arch    # refresh arch.md + Mermaid diagrams
 ```
 
 Uses `Agent.prompt()` with **local** runtime (`cwd` = playwrighter repo root) per the Cursor SDK docs.
 
 ## Without SDK
 
-Apply the same checklist manually from `CHANGELOG.md` [3.1.1] or use the IDE agent with `.cursor/rules/playwrighter.mdc` loaded.
+- Harness fixes: `CHANGELOG.md` [3.1.1] or IDE agent with `.cursor/rules/playwrighter.mdc`.
+- Architecture: edit `arch.md` at repo root (checked in; diagrams should match `skill/SKILL.md` and `tools/`).
