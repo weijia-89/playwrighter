@@ -12,13 +12,11 @@ alwaysApply: false
 
 # Playwrighter
 
-**Canonical body:** `<workspace>/playwrighter/.claude/skills/playwrighter/SKILL.md`
-
-Read the canonical SKILL.md and the relevant pattern file(s) before writing or modifying Playwright tests.
+**Canonical body:** `<workspace>/playwrighter/skill/SKILL.md` (single source of truth). Optional user mirror: symlink `skill/SKILL.md` into your agent's skills directory. Read the canonical SKILL.md in full when this rule loads.
 
 ## Mandatory before writing/editing tests
 
-1. Read `playwrighter/.claude/skills/playwrighter/SKILL.md` (full)
+1. Read `playwrighter/skill/SKILL.md` (full)
 2. Read `playwrighter/patterns/locator-strategy.md`
 3. Read `playwrighter/patterns/waiting-timing.md`
 4. Read `playwrighter/patterns/anti-patterns.md`
@@ -47,7 +45,7 @@ Read the canonical SKILL.md and the relevant pattern file(s) before writing or m
 
 ```
 playwrighter/
-├── .claude/skills/playwrighter/SKILL.md   ← canonical body
+├── skill/SKILL.md                         ← canonical body
 ├── patterns/                              ← 23 pattern files
 ├── templates/                             ← config, fixtures, POMs, test scaffold
 ├── tools/validate-suite.sh                ← anti-pattern linter
