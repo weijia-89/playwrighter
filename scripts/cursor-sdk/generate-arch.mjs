@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generate or refresh arch.md via Cursor SDK (local agent).
+ * Generate or refresh ARCH.MD via Cursor SDK (local agent).
  *
  * Usage:
  *   export CURSOR_API_KEY=...
@@ -12,7 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const archPath = path.join(repoRoot, 'arch.md');
+const archPath = path.join(repoRoot, 'ARCH.MD');
 
 const PROMPT = `You are documenting the playwrighter repository architecture. Work only under ${repoRoot}.
 
@@ -39,7 +39,7 @@ Do not commit unless asked.`;
 
 const apiKey = process.env.CURSOR_API_KEY;
 if (!apiKey) {
-  console.error('CURSOR_API_KEY is not set. Export it or edit arch.md manually.');
+  console.error('CURSOR_API_KEY is not set. Export it or edit ARCH.MD manually.');
   process.exit(1);
 }
 
@@ -58,7 +58,7 @@ try {
   } else {
     console.log(`Created: ${archPath}`);
   }
-  console.log(result.result ?? '(see arch.md)');
+  console.log(result.result ?? '(see ARCH.MD)');
 } catch (err) {
   if (err instanceof CursorAgentError) {
     console.error('SDK startup failed:', err.message);

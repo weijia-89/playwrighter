@@ -280,4 +280,4 @@ export CURSOR_API_KEY=...
 npm run generate-arch
 ```
 
-Or edit `arch.md` by hand; keep diagrams aligned with `skill/SKILL.md` and `tools/score-tests.js` rubric comments.
+Or edit `ARCH.MD` by hand; keep diagrams aligned with `skill/SKILL.md` and `tools/score-tests.js` rubric comments.

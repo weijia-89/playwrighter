@@ -214,6 +214,7 @@ playwrighter/
 ├── patterns/                  # 23 pattern files
 ├── templates/                 # 8 ready-to-copy templates
 ├── tools/                     # validate-suite.sh + score-tests.js (inline rubric)
+├── ARCH.MD                    # Architecture + Mermaid diagrams
 ├── INDEX.md                   # This file
 └── README.md                  # Entry point
 ```
