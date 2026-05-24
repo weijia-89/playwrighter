@@ -3,53 +3,77 @@ description: Generate production-quality Playwright tests using official best pr
 globs:
   - "**/*.spec.ts"
   - "**/*.spec.tsx"
+  - "**/*.setup.ts"
   - "**/playwright.config.ts"
   - "**/playwright.config.js"
+  - "**/fixtures.ts"
   - "**/tests/**/*.ts"
+  - "**/tests/*.{ts,tsx}"
   - "**/e2e/**/*.ts"
+  - "**/pages/**/*.ts"
 alwaysApply: false
 ---
 
 # Playwrighter
 
-**Canonical body:** `<workspace>/playwrighter/skill/SKILL.md` (single source of truth). Optional user mirror: symlink `skill/SKILL.md` into your agent's skills directory. Read the canonical SKILL.md in full when this rule loads.
+**Canonical body:** `skill/SKILL.md` at the playwrighter repo root (single source of truth). If this repo is vendored as a subfolder, prefix paths with `playwrighter/` (e.g. `playwrighter/skill/SKILL.md`). Optional user mirror: symlink `skill/SKILL.md` into your agent's skills directory. Read the canonical SKILL.md in full when this rule loads.
 
 ## Mandatory before writing/editing tests
 
-1. Read `playwrighter/skill/SKILL.md` (full)
-2. Read `playwrighter/patterns/locator-strategy.md`
-3. Read `playwrighter/patterns/waiting-timing.md`
-4. Read `playwrighter/patterns/anti-patterns.md`
-5. Read the task-specific pattern from the index in `SKILL.md`
+1. Read `skill/SKILL.md` (full)
+2. Read `patterns/locator-strategy.md`
+3. Read `patterns/waiting-timing.md`
+4. Read `patterns/assertions.md`
+5. Read `patterns/anti-patterns.md`
+6. Read the task-specific pattern from the index in `SKILL.md`
 
-## Core invariants (NEVER break)
+## Output contract (every generated spec)
+
+- Import `test` / `expect` from `./fixtures` (or your project's fixture module), not raw `@playwright/test` in spec files
+- `[TC-XXX]` ID in each test title
+- Priority + category tags (`@P0 @smoke`, etc.)
+- Web-first assertions after each action
+- Accessible locators (prefer `npx playwright codegen <url>` over hand-written CSS)
+- `./tools/validate-suite.sh` exits 0 (errors block; warnings need `--strict` or review)
+- `node tools/score-tests.js` ≥ 80/100
+
+## Core invariants (NEVER break in generated specs)
 
 - Locator priority: `getByRole > getByLabel > getByText > getByTestId > CSS`
 - NEVER `page.waitForTimeout()`
 - NEVER `waitForLoadState('networkidle')`
 - NEVER `expect(await x.isVisible()).toBe(true)` — use `await expect(x).toBeVisible()`
-- NEVER `.toBeTruthy()` for UI assertions
+- NEVER `.toBeTruthy()` / `.toBeFalsy()` for UI assertions (API shape checks: use `toMatchObject` / specific matchers)
 - NEVER `test.only()` or `page.pause()` in committed code
-- NEVER conditional branching in tests (`if (await ...)`) — split into separate tests
-- NEVER `{ force: true }` without justification
+- Prefer no `if (await …)` branching — split into separate tests (`validate-suite.sh` warns; scorer −3)
+- NEVER `{ force: true }` without justification (`validate-suite.sh` warns; scorer −2)
+- POMs: navigation sanity checks after `goto()` only; test assertions stay in spec files (see `patterns/page-object-model.md`)
 
 ## Workflow
 
-1. Read patterns relevant to the task
-2. Use `templates/` as starting points (don't reinvent config/fixtures/POMs)
-3. Write tests per `templates/test-template.ts` shape (AAA, `test.step`, tagged)
-4. Validate with `tools/validate-suite.sh` and `tools/score-tests.js`
-5. Reference 2026 features when appropriate: Test Agents, component testing, devices registry
+1. Read patterns relevant to the task (baseline four + task-specific from `SKILL.md`)
+2. `npx playwright codegen <url>` for locators before hand-writing CSS
+3. Use `templates/` as starting points; copy `tools/` into the consumer project if using `npm run validate` / `score`
+4. Write tests per `templates/test-template.ts` (AAA, `test.step` where traces benefit, tagged)
+5. Validate: `tools/validate-suite.sh` then `node tools/score-tests.js`
+6. Optional: `patterns/test-agents.md` (Planner/Generator/Healer), `patterns/component-testing.md`, `patterns/mobile-responsive.md` (`devices` from `@playwright/test`)
 
-## File map
+## Enforcement vs docs
+
+| Layer | Role |
+|-------|------|
+| `patterns/anti-patterns.md` | Full NEVER list (not all rows are machine-checked) |
+| `tools/validate-suite.sh` | Hard errors: timeouts, networkidle, manual isVisible/textContent, toBeTruthy, test.only, page.pause |
+| `tools/score-tests.js` | 100-pt rubric; TC IDs, tags, expect density, CSS in `.locator()`, etc. |
+
+## File map (repo root)
 
 ```
-playwrighter/
-├── skill/SKILL.md                         ← canonical body
-├── patterns/                              ← 23 pattern files
-├── templates/                             ← config, fixtures, POMs, test scaffold
-├── tools/validate-suite.sh                ← anti-pattern linter
-└── tools/score-tests.js                   ← 100-pt quality scorecard
+skill/SKILL.md
+patterns/                    ← 23 pattern files
+templates/                   ← config, fixtures, POMs, test scaffold
+tools/validate-suite.sh
+tools/score-tests.js
 ```
 
 For task-specific patterns, follow the index in `SKILL.md`.

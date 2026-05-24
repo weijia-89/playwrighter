@@ -220,5 +220,5 @@ playwrighter/
 
 ---
 
-**Version**: 3.0.0
-**Updated**: 2026-05-14
+**Version**: 3.1.1
+**Updated**: 2026-05-24

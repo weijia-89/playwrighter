@@ -50,7 +50,8 @@ if (!fs.existsSync(target)) {
 //    -2 per CSS class/id inside .locator('…') (cap -10 total)
 //    -5  nth-child() / nth-of-type()
 //    -5  xpath= selector
-//   (Not scored here: custom fixtures, getByRole vs getByText — see patterns/ + validate-suite.sh)
+//   (Not scored here: getByRole vs getByText — see patterns/ + validate-suite.sh)
+//   Spec files should import ./fixtures (-5 if @playwright/test only in .spec/.test files)
 //
 // Completeness (25 max) — traceability and assertions
 //    -3 per test missing [TC-XXX] in title (cap -10)
@@ -128,6 +129,18 @@ function scoreFile(filePath) {
   if (/\{\s*force:\s*true\s*\}/.test(content)) {
     score -= 2;
     findings.push({ severity: 'warning', msg: 'force: true bypasses actionability checks' });
+  }
+  const isSpecFile = /\.(spec|test)\.(ts|js)$/.test(filePath);
+  if (
+    isSpecFile &&
+    /from\s+['"]@playwright\/test['"]/.test(content) &&
+    !/from\s+['"]\.\/fixtures['"]/.test(content)
+  ) {
+    score -= 5;
+    findings.push({
+      severity: 'warning',
+      msg: 'spec imports @playwright/test directly; use custom fixtures (./fixtures)',
+    });
   }
 
   // --- Maintainability (-20 max) ---

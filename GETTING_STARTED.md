@@ -16,8 +16,10 @@ Copy this guide to go from zero to passing test.
 ```bash
 mkdir my-tests && cd my-tests
 
-# Copy templates from playwrighter
+# Copy templates + quality tools from playwrighter
 cp -r /path/to/playwrighter/templates/. .
+cp -r /path/to/playwrighter/tools ./tools
+chmod +x ./tools/validate-suite.sh
 
 # Install
 npm install

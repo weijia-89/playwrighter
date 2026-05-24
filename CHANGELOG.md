@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.1.1] - 2026-05-24
+
+### Fixed
+
+- `.cursor/rules/playwrighter.mdc`: repo-root paths, vendored-prefix note, `assertions.md` mandatory read, output contract, codegen, enforcement table, expanded globs; removed erroneous "devices registry" wording.
+- `templates/`: copy `tools/` documented; `scripts/check-tools.js` guards `npm run validate` / `score`; POM assertions moved out of `LoginPage.expectError` into spec template.
+- `patterns/anti-patterns.md`: POM assertion row aligned with `page-object-model.md` sanity-check carve-out.
+- `README.md` / `GETTING_STARTED.md`: dual integration paths (repo root vs subfolder); `@playwright/test` ≥ 1.50.
+- CI dogfood: run `validate-suite.sh` on northwind-qa before scorer.
+- `tools/score-tests.js`: penalize `@playwright/test` imports in spec files (custom fixtures expected).
+
+### Added
+
+- `scripts/cursor-sdk/apply-harness-fixes.mjs`: optional Cursor SDK runner to re-apply harness fixes (`CURSOR_API_KEY` required).
+
 ## [3.1.0] - 2026-05-24
 
 ### Added

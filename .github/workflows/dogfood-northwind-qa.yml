@@ -33,6 +33,10 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Lint northwind-qa with validate-suite
+        run: |
+          playwrighter/tools/validate-suite.sh northwind-qa/tests/
+
       - name: Score northwind-qa suite against playwrighter rubric
         run: |
           node playwrighter/tools/score-tests.js northwind-qa/tests/ --threshold=80

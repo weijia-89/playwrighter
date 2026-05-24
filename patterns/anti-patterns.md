@@ -36,7 +36,7 @@ A single reference for what NOT to do, with replacements.
 | `expect(await x.count()).toBeTruthy()` | `await expect(x).toHaveCount(n)` | Specific failure msg |
 | `expect(await x.textContent()).toContain('y')` | `await expect(x).toContainText('y')` | Web-first assertion |
 | Action without assertion: `await btn.click()` (end of test) | Add `await expect(...)` after | Test passes if nothing happened |
-| Assertions inside POM | Assertions in test files | Couples POM to test intent |
+| Test assertions inside POM (beyond `goto()` sanity checks) | Assertions in spec files; POM exposes actions/locators only | Couples POM to test intent |
 
 ---
 
