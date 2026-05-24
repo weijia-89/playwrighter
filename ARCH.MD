@@ -7,48 +7,55 @@ playwrighter is a **documentation + scaffolding + lint/score harness** for Playw
 ## System context
 
 ```mermaid
-flowchart TB
-  subgraph actors [Actors]
+flowchart TD
+  subgraph actors [1. Actors]
+    direction TB
     Human[Human engineer]
     Agent[AI agent Cursor / CLI / other]
   end
 
-  subgraph playwrighter [playwrighter repo]
+  subgraph playwrighter [2. playwrighter repo]
+    direction TB
+    Index["INDEX.md / README.md"]
     Rule[".cursor/rules/playwrighter.mdc"]
     Skill["skill/SKILL.md"]
     Patterns["patterns/ 23 topic files"]
     Templates["templates/ bootstrap kit"]
-    Tools["tools/ validate + score"]
-    Index["INDEX.md / README.md"]
+    PwTools["tools/ validate + score"]
+    Rule --> Skill
+    Skill --> Patterns
+    Skill --> Templates
+    Skill --> PwTools
   end
 
-  subgraph consumer [Consumer test project]
+  subgraph consumer [3. Consumer test project]
+    direction TB
+    ConsTemplates["templates/ + playwright.config + fixtures + POMs"]
+    ConsTools["tools/ copied from playwrighter"]
     Specs["*.spec.ts suite"]
-    Config["playwright.config.ts"]
-    Fix["fixtures.ts + POMs"]
-    CopiedTools["tools/ copied from playwrighter"]
+    ConsTemplates --> Specs
+    ConsTools --> Specs
   end
 
-  subgraph external [External validation]
-    SUT[Application under test]
-    NW["northwind-qa dogfood suite"]
+  subgraph external [4. External validation]
+    direction TB
     GHA["GitHub Actions dogfood workflow"]
+    NW["northwind-qa dogfood suite"]
+    SUT[Application under test]
+    GHA --> NW
+    NW --> SUT
   end
+
+  actors --> playwrighter
+  playwrighter --> consumer
+  consumer --> external
 
   Human --> Index
-  Human --> Templates
   Agent --> Rule
-  Rule --> Skill
-  Skill --> Patterns
-  Skill --> Templates
-  Agent --> Patterns
-  Templates --> consumer
-  Tools --> CopiedTools
-  CopiedTools --> Specs
+  Templates --> ConsTemplates
+  PwTools --> ConsTools
   Specs --> SUT
-  GHA --> Tools
-  GHA --> NW
-  NW --> SUT
+  PwTools --> GHA
 ```
 
 ---
