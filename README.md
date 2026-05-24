@@ -2,7 +2,7 @@
 
 I built playwrighter as a Playwright pattern library plus a working test-quality scorer, so an AI agent or a human writing E2E tests has both the patterns to follow and an automated way to check whether the suite actually follows them. The patterns (23 of them under `patterns/`) come from Playwright's official docs, from mxschmitt/awesome-playwright, and from conventions I verified across community projects. The scorer at `tools/score-tests.js` reads a directory of `.spec.ts` files and grades them against a rubric aligned with the patterns: it penalizes the syntactic flake and locator issues the anti-patterns doc emphasizes (for example `waitForTimeout` and CSS class or id selectors inside `.locator()`). Additional rows in `patterns/anti-patterns.md` are covered by `tools/validate-suite.sh` or by review, not by every line having an automatic score penalty. The repo also ships 8 ready-to-copy templates under `templates/` (config, fixtures, auth setup, POMs, package.json) and that validate-suite linter pass.
 
-The skill ships as a multi-tool bundle pointing at the same canonical body. Claude loads `.claude/skills/playwrighter/SKILL.md`, Cursor loads `.cursor/rules/playwrighter.mdc`, and Windsurf loads `.windsurf/rules/playwrighter.md` plus a `/playwrighter` slash command. For human readers, `INDEX.md` is the entry point.
+The agent skill ships from a single canonical body at `skill/SKILL.md`. Cursor loads `.cursor/rules/playwrighter.mdc` (which points at that file); other agents can symlink or copy `skill/SKILL.md` into their skill directory. For human readers, `INDEX.md` is the entry point.
 
 ---
 
@@ -35,7 +35,8 @@ The 23 pattern files are where the scorer's rules trace back to. The scorer pena
 
 ```
 playwrighter/
-├── .cursor/rules/playwrighter.mdc         # Cursor rule
+├── skill/SKILL.md                         # Canonical agent skill body
+├── .cursor/rules/playwrighter.mdc         # Cursor rule (points at skill/SKILL.md)
 ├── patterns/                              # 23 pattern files
 │   ├── locator-strategy.md
 │   ├── waiting-timing.md
@@ -157,54 +158,39 @@ All patterns trace to primary sources:
 
 ## Integration
 
-The skill ships with invocation files for **Claude, Cursor, and Windsurf**. All three point at the same canonical body (`.claude/skills/playwrighter/SKILL.md`) and pattern files, pick whichever path your AI tool uses.
-
-### Claude Code / Claude Desktop
-Symlink the skill folder:
-```bash
-ln -s "$(pwd)/playwrighter/.claude/skills/playwrighter" \
-      <your-project>/.claude/skills/playwrighter
-```
-Or per-user (global):
-```bash
-ln -s "$(pwd)/playwrighter/.claude/skills/playwrighter" \
-      ~/.claude/skills/playwrighter
-```
-Claude auto-loads `SKILL.md` when its `description` field matches the user's request.
+Canonical skill body: **`skill/SKILL.md`** at the playwrighter repo root. Patterns and tools live alongside it in the same checkout.
 
 ### Cursor
-Symlink the rule:
+Symlink the rule into your project or user rules:
 ```bash
 mkdir -p <your-project>/.cursor/rules
-ln -s "$(pwd)/playwrighter/.cursor/rules/playwrighter.mdc" \
+ln -sf "$(pwd)/playwrighter/.cursor/rules/playwrighter.mdc" \
       <your-project>/.cursor/rules/playwrighter.mdc
 ```
 Or per-user:
 ```bash
-ln -s "$(pwd)/playwrighter/.cursor/rules/playwrighter.mdc" \
+ln -sf "$(pwd)/playwrighter/.cursor/rules/playwrighter.mdc" \
       ~/.cursor/rules/playwrighter.mdc
 ```
-Triggers via globs (`*.spec.ts`, `playwright.config.ts`, `tests/**/*.ts`) or model decision.
+Triggers via globs (`*.spec.ts`, `playwright.config.ts`, `tests/**/*.ts`) or model decision. The rule instructs the agent to read `skill/SKILL.md` first.
 
-### Windsurf
-Symlink the rule + workflow:
+### Other agents (skills.sh, Windsurf, CLI tools with a skills directory)
+Symlink the canonical skill file into your agent's skill directory (adjust paths to your tool):
 ```bash
-mkdir -p <your-project>/.windsurf/{rules,workflows}
-ln -s "$(pwd)/playwrighter/.windsurf/rules/playwrighter.md" \
-      <your-project>/.windsurf/rules/playwrighter.md
-ln -s "$(pwd)/playwrighter/.windsurf/workflows/playwrighter.md" \
-      <your-project>/.windsurf/workflows/playwrighter.md
+mkdir -p ~/.your-agent/skills/playwrighter
+ln -sf "$(pwd)/playwrighter/skill/SKILL.md" ~/.your-agent/skills/playwrighter/SKILL.md
 ```
-Triggers as a model-decision rule, or via the `/playwrighter` slash command.
+Keep the full playwrighter repo checkout available so `patterns/` and `tools/` resolve.
 
 ### Reference patterns in your project's AI rules
 ```markdown
 ## QA Automation Patterns
 See: <path-to-playwrighter>/patterns/
+Canonical skill: <path-to-playwrighter>/skill/SKILL.md
 ```
 
 ### Verify
-After symlinking, ask your AI tool: *"Write a Playwright test for the login flow."* It should read the canonical `SKILL.md` and the relevant pattern files before producing tests.
+After symlinking, ask your AI tool: *"Write a Playwright test for the login flow."* It should read `skill/SKILL.md` and the relevant pattern files before producing tests.
 
 ---
 
@@ -223,6 +209,6 @@ Three more in the same ethos:
 
 ---
 
-**Version**: 3.0.0
-**Updated**: 2026-05-14
+**Version**: 3.1.0
+**Updated**: 2026-05-24
 **Maintained**: Patterns are stable; updated when official Playwright guidance changes.

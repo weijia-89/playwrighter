@@ -188,18 +188,20 @@ See the rubric comment block in `tools/score-tests.js` for penalty tables, thres
 
 ### Reference patterns from your project
 ```bash
-# Symlink the skill (run from playwrighter root)
-ln -s "$(pwd)/.claude/skills/playwrighter" \
-      <your-project>/.claude/skills/playwrighter
+# Symlink canonical skill (run from playwrighter root; adjust target dir for your agent)
+mkdir -p <your-agent-skills>/playwrighter
+ln -sf "$(pwd)/skill/SKILL.md" \
+      <your-agent-skills>/playwrighter/SKILL.md
 
-# Or copy patterns
+# Or copy patterns only
 cp -r patterns/ <your-project>/qa-patterns/
 ```
 
-### Reference in CLAUDE.md
+### Reference in agent project docs
 ```markdown
 ## QA Patterns
 See: <path-to-playwrighter>/patterns/
+Skill: <path-to-playwrighter>/skill/SKILL.md
 ```
 
 ---
@@ -208,7 +210,7 @@ See: <path-to-playwrighter>/patterns/
 
 ```
 playwrighter/
-├── .claude/skills/playwrighter/SKILL.md
+├── skill/SKILL.md             # Canonical agent skill body
 ├── patterns/                  # 23 pattern files
 ├── templates/                 # 8 ready-to-copy templates
 ├── tools/                     # validate-suite.sh + score-tests.js (inline rubric)
