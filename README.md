@@ -2,7 +2,7 @@
 
 I built playwrighter as a Playwright pattern library plus a working test-quality scorer, so an AI agent or a human writing E2E tests has both the patterns to follow and an automated way to check whether the suite actually follows them. The patterns (23 of them under `patterns/`) come from Playwright's official docs, from mxschmitt/awesome-playwright, and from conventions I verified across community projects. The scorer at `tools/score-tests.js` reads a directory of `.spec.ts` files and grades them against a rubric aligned with the patterns: it penalizes the syntactic flake and locator issues the anti-patterns doc emphasizes (for example `waitForTimeout` and CSS class or id selectors inside `.locator()`). Additional rows in `patterns/anti-patterns.md` are covered by `tools/validate-suite.sh` or by review, not by every line having an automatic score penalty. The repo also ships 8 ready-to-copy templates under `templates/` (config, fixtures, auth setup, POMs, package.json) and that validate-suite linter pass.
 
-The agent skill ships from a single canonical body at `skill/SKILL.md`. Cursor loads `.cursor/rules/playwrighter.mdc` (which points at that file); other agents can symlink or copy `skill/SKILL.md` into their skill directory. For human readers, `INDEX.md` is the entry point.
+The agent skill ships from a single canonical body at `skill/SKILL.md`. Cursor loads `.cursor/rules/playwrighter.mdc` (which points at that file); other agents can symlink or copy `skill/SKILL.md` into their skill directory. For human readers, `INDEX.md` is the entry point. For system layout and Mermaid diagrams, see [`arch.md`](arch.md).
 
 ---
 

@@ -1,0 +1,13 @@
+{
+  "name": "playwrighter-cursor-sdk",
+  "private": true,
+  "type": "module",
+  "description": "Apply playwrighter harness fixes via Cursor SDK (optional; requires CURSOR_API_KEY)",
+  "scripts": {
+    "apply-fixes": "node apply-harness-fixes.mjs",
+    "generate-arch": "node generate-arch.mjs"
+  },
+  "dependencies": {
+    "@cursor/sdk": "^1.0.13"
+  }
+}
