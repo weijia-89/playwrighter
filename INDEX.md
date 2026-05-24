@@ -169,7 +169,7 @@ expect(...).toBeTruthy();                                 // generic
 | Execution | 15% |
 | Coverage | 15% |
 
-See the rubric comment block in `tools/score-tests.js` for category definitions.
+See the rubric comment block in `tools/score-tests.js` for penalty tables, thresholds, and limitations (canonical; matches `scoreFile()`).
 
 ---
 
