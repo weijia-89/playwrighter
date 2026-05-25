@@ -73,7 +73,7 @@ playwrighter/
 │       └── dashboard-page.ts
 ├── tools/
 │   ├── validate-suite.sh                  # Anti-pattern linter
-│   └── score-tests.js                     # Quality scorecard (inline rubric)
+│   └── score-tests.js                     # 100-point quality rubric (scoreFile(); inline comment canonical)
 ├── ARCH.MD                                # Architecture + Mermaid diagrams
 ├── INDEX.md                               # Pattern topic map
 └── README.md                              # This file

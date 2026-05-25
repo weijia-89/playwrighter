@@ -141,7 +141,6 @@ function scoreFile(filePath) {
   }
 
   // --- Maintainability (-20 max) ---
-  // sdk-review F1: fixture-import check lives here to match rubric comment taxonomy
   const isSpecFile = /\.(spec|test)\.(ts|js)$/.test(filePath);
   if (
     isSpecFile &&
