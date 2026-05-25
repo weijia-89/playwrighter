@@ -72,7 +72,7 @@
 | File | Purpose |
 |------|---------|
 | `tools/validate-suite.sh` | Lint suite for anti-patterns (waitForTimeout, etc.) |
-| `tools/score-tests.js` | 100-point quality scorecard implementation |
+| `tools/score-tests.js` | 100-point quality rubric (`scoreFile()`; inline comment is canonical) |
 
 ---
 

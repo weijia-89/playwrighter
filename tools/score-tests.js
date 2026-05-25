@@ -33,8 +33,12 @@ if (!fs.existsSync(target)) {
 
 // --- Rubric (100 points total; ground truth = scoreFile() below) ---
 //
-// Categories (weights):
-//   Reliability 25 | Maintainability 20 | Completeness 25 | Coverage 15 | Execution 15
+// Categories (weights and what is measured):
+//   Reliability 25      — no flaky patterns (fixed waits, networkidle, manual assertions)
+//   Maintainability 20  — stable locators (no brittle CSS/nth/xpath); custom fixtures in specs
+//   Completeness 25     — [TC-XXX] traceability and expect() assertions per test
+//   Coverage 15         — priority (@P0–@P3) and category (@smoke/@regression/@critical/@a11y) tags
+//   Execution 15        — reasonable file size (split oversized files)
 //
 // Reliability (25 max) — flaky / non–web-first patterns
 //   -10  waitForTimeout()
@@ -47,7 +51,7 @@ if (!fs.existsSync(target)) {
 //    -2  { force: true } (bypasses actionability)
 //
 // Maintainability (20 max) — locator stability and fixture imports
-//    -2 per CSS class/id inside .locator('…') (cap -10 total)
+//    -2 per CSS class/id inside .locator('…') (e.g. .btn-primary, #submit; cap -10 total)
 //    -5  nth-child() / nth-of-type()
 //    -5  xpath= selector
 //    -5  .spec/.test imports @playwright/test instead of ./fixtures or ../fixtures
