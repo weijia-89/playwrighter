@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Consumer bootstrap section in `templates/README.md` (templates → `tools/` → `npm run validate` / `score`); README enforcement map aligned with `validate-suite.sh` and `score-tests.js`.
 
+### Changed
+
+- Expanded inline rubric in `tools/score-tests.js` (full penalty tables, thresholds, limitations paraphrased from deleted scorecard); README fixture-import and non-scored guidance aligned with `scoreFile()`.
+- Scorer CLI banner renamed to **Quality Rubric** (post–scorecard purge); fixture-import exemption accepts `./fixtures` and `../fixtures`.
+
 ## [3.1.1] - 2026-05-24
 
 ### Fixed

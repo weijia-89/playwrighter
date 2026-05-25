@@ -27,7 +27,7 @@ A pattern library on its own is documentation, and documentation gets read once 
 
 The scorer is intentionally regex-and-AST simple. It can't tell whether your test is meaningfully testing the right thing, and it doesn't catch the semantic anti-patterns that show up in code review (assertions that don't really constrain behavior, test names that misrepresent what the body asserts). What it does catch is the syntactic decay that creeps into a suite over time, from the flake-fix that introduced a `waitForTimeout` to the quick-locator shortcut that landed a CSS selector instead of an accessible role. Those are the regressions a code reviewer also misses when the diff is large and the time is short, and the scorer fails CI before the reviewer has to find them.
 
-The 23 pattern files are where the scorer's rules trace back to. The scorer penalizes CSS selectors inside `.locator()` and the flake patterns in `patterns/anti-patterns.md`; `patterns/locator-strategy.md` explains why `getByRole` beats CSS, and `patterns/waiting-timing.md` explains why fixed waits are the wrong abstraction. Fixtures, `test.step()`, and per-test length are guidance in the pattern docs and in `tools/validate-suite.sh`, not automatic score penalties. The library and the scorer share a vocabulary on what they do measure, so a contributor or an AI agent reading the SKILL can write tests that pass the scorer for the syntactic bar it enforces.
+The 23 pattern files are where the scorer's rules trace back to. The scorer penalizes CSS selectors inside `.locator()` and the flake patterns in `patterns/anti-patterns.md`; `patterns/locator-strategy.md` explains why `getByRole` beats CSS, and `patterns/waiting-timing.md` explains why fixed waits are the wrong abstraction. Spec files that import `@playwright/test` directly instead of `./fixtures` or `../fixtures` cost 5 points; `test.step()`, per-test length, and getByRole-vs-getByText choices stay in the pattern docs and `tools/validate-suite.sh`, not automatic score penalties. The library and the scorer share a vocabulary on what they do measure, so a contributor or an AI agent reading the SKILL can write tests that pass the scorer for the syntactic bar it enforces.
 
 ---
 
@@ -129,7 +129,7 @@ Not every row in `patterns/anti-patterns.md` is automated. Two CLI tools split r
 | `page.$()` (deprecated) | Warning | — | ESLint |
 | `page.click('text=…')` | Warning | — | — |
 | `setTimeout()` in tests | Warning | — | — |
-| Spec imports `@playwright/test` not `./fixtures` | — | −5 | `patterns/fixtures.md` |
+| Spec imports `@playwright/test` not `./fixtures` or `../fixtures` | — | −5 | `patterns/fixtures.md` |
 | Missing `[TC-XXX]` in test title | — | −3 each (cap −10) | — |
 | No `expect()` / fewer expects than tests | — | −15 / −5 | ESLint (`expect-expect`) |
 | Missing `@P0`–`@P3` priority tag | — | −5 | — |

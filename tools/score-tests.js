@@ -46,12 +46,12 @@ if (!fs.existsSync(target)) {
 //    -3  if (await ...) conditional (split tests instead)
 //    -2  { force: true } (bypasses actionability)
 //
-// Maintainability (20 max) — locator stability
+// Maintainability (20 max) — locator stability and fixture imports
 //    -2 per CSS class/id inside .locator('…') (cap -10 total)
 //    -5  nth-child() / nth-of-type()
 //    -5  xpath= selector
-//   (Not scored here: getByRole vs getByText — see patterns/ + validate-suite.sh)
-//   Spec files should import ./fixtures (-5 if @playwright/test only in .spec/.test files)
+//    -5  .spec/.test imports @playwright/test instead of ./fixtures or ../fixtures
+//   (Not scored here: getByRole vs getByText — see patterns/locator-strategy.md + validate-suite.sh)
 //
 // Completeness (25 max) — traceability and assertions
 //    -3 per test missing [TC-XXX] in title (cap -10)
@@ -64,12 +64,17 @@ if (!fs.existsSync(target)) {
 //
 // Execution (15 max) — file size
 //    -5  file > 400 lines (consider splitting)
-//   (Not scored here: per-test >100 lines, test.step() — manual review / patterns/test-structure.md)
+//   (Not scored here: per-test >100 lines — consider test.step() or split; see patterns/test-structure.md)
 //
-// Thresholds (CLI default --threshold=80): 70+ feature branch, 80+ main, 90+ production, 95+ exemplary.
+// Thresholds (CLI default --threshold=80):
+//   70+ minimum for feature branch | 80+ main | 90+ production-ready | 95+ exemplary
 //
-// Limitations: regex/AST surface checks only — not test value, behavior coverage, data quality,
-// locator stability over time, or failure debuggability. Pair with code review.
+// Limitations (surface checks only; pair with code review — necessary, not sufficient):
+//   - Test value — does the test catch real bugs?
+//   - Behavior coverage — are critical paths tested?
+//   - Test data quality — are edge cases covered?
+//   - Locator stability over time — would this break next sprint?
+//   - Failure debuggability — can someone fix a failure in ~5 minutes?
 
 function findTestFiles(dir) {
   const files = [];
@@ -130,20 +135,21 @@ function scoreFile(filePath) {
     score -= 2;
     findings.push({ severity: 'warning', msg: 'force: true bypasses actionability checks' });
   }
+
+  // --- Maintainability (-20 max) ---
+  // sdk-review F1: fixture-import check lives here to match rubric comment taxonomy
   const isSpecFile = /\.(spec|test)\.(ts|js)$/.test(filePath);
   if (
     isSpecFile &&
     /from\s+['"]@playwright\/test['"]/.test(content) &&
-    !/from\s+['"]\.\/fixtures['"]/.test(content)
+    !/from\s+['"]\.\.?\/fixtures['"]/.test(content)
   ) {
     score -= 5;
     findings.push({
       severity: 'warning',
-      msg: 'spec imports @playwright/test directly; use custom fixtures (./fixtures)',
+      msg: 'spec imports @playwright/test directly; use custom fixtures (./fixtures or ../fixtures)',
     });
   }
-
-  // --- Maintainability (-20 max) ---
   // Catch CSS class/id selectors anywhere in .locator() calls (including chains)
   // Matches: page.locator('.foo'), .locator('#x'), .locator('div.bar'), parent.locator('#y')
   const cssLocatorMatches = (
@@ -250,7 +256,7 @@ if (jsonOutput) {
     )
   );
 } else {
-  console.log(`\nQuality Scorecard — ${target}`);
+  console.log(`\nQuality Rubric — ${target}`);
   console.log(`Threshold: ${threshold}/100\n`);
   for (const r of results.sort((a, b) => a.score - b.score)) {
     const status = r.score >= threshold ? '✅' : '❌';
