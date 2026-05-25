@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- Expanded inline rubric in `tools/score-tests.js` (full penalty tables, thresholds, limitations paraphrased from deleted scorecard); README fixture-import and non-scored guidance aligned with `scoreFile()`.
+- Expanded inline rubric in `tools/score-tests.js` (category summaries, penalty tables, thresholds, limitations paraphrased from deleted scorecard); README fixture-import and non-scored guidance aligned with `scoreFile()`.
 - Scorer CLI banner renamed to **Quality Rubric** (post–scorecard purge); fixture-import exemption accepts `./fixtures` and `../fixtures`.
 
 ## [3.1.1] - 2026-05-24
