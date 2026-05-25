@@ -50,7 +50,7 @@ if (!fs.existsSync(target)) {
 //    -2 per CSS class/id inside .locator('…') (cap -10 total)
 //    -5  nth-child() / nth-of-type()
 //    -5  xpath= selector
-//    -5  .spec/.test imports @playwright/test instead of ./fixtures
+//    -5  .spec/.test imports @playwright/test instead of ./fixtures or ../fixtures
 //   (Not scored here: getByRole vs getByText — see patterns/locator-strategy.md + validate-suite.sh)
 //
 // Completeness (25 max) — traceability and assertions
@@ -135,20 +135,21 @@ function scoreFile(filePath) {
     score -= 2;
     findings.push({ severity: 'warning', msg: 'force: true bypasses actionability checks' });
   }
+
+  // --- Maintainability (-20 max) ---
+  // sdk-review F1: fixture-import check lives here to match rubric comment taxonomy
   const isSpecFile = /\.(spec|test)\.(ts|js)$/.test(filePath);
   if (
     isSpecFile &&
     /from\s+['"]@playwright\/test['"]/.test(content) &&
-    !/from\s+['"]\.\/fixtures['"]/.test(content)
+    !/from\s+['"]\.\.?\/fixtures['"]/.test(content)
   ) {
     score -= 5;
     findings.push({
       severity: 'warning',
-      msg: 'spec imports @playwright/test directly; use custom fixtures (./fixtures)',
+      msg: 'spec imports @playwright/test directly; use custom fixtures (./fixtures or ../fixtures)',
     });
   }
-
-  // --- Maintainability (-20 max) ---
   // Catch CSS class/id selectors anywhere in .locator() calls (including chains)
   // Matches: page.locator('.foo'), .locator('#x'), .locator('div.bar'), parent.locator('#y')
   const cssLocatorMatches = (
@@ -255,7 +256,7 @@ if (jsonOutput) {
     )
   );
 } else {
-  console.log(`\nQuality Scorecard — ${target}`);
+  console.log(`\nQuality Rubric — ${target}`);
   console.log(`Threshold: ${threshold}/100\n`);
   for (const r of results.sort((a, b) => a.score - b.score)) {
     const status = r.score >= threshold ? '✅' : '❌';
