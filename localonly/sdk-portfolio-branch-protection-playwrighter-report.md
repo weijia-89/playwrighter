@@ -22,9 +22,9 @@
 
 | Path | Status |
 | ---- | ------ |
-| `docs/BRANCH_PROTECTION.md` | present — policy table, solo-maintainer tradeoff, apply/verify commands |
+| `docs/BRANCH_PROTECTION.md` | refreshed — ruleset-aware current state, policy table, apply/verify commands |
 | `scripts/apply_branch_protection.sh` | present, executable — `DRY_RUN=1` default, `GH_REPO=weijia-89/playwrighter` |
-| This report | present |
+| This report | refreshed |
 
 ## Repo snapshot (`gh repo view`)
 
@@ -33,30 +33,34 @@
 | Default branch | main |
 | Visibility | PUBLIC |
 | viewerPermission | ADMIN |
-| viewerCanAdminister | true |
 
 ## Live protection state (GET, no APPLY run this session)
 
 `APPLY=1` was **not** set in the worker environment; live PUT was skipped per portfolio wave gate.
 
+### Classic branch protection
+
 ```bash
 gh api repos/weijia-89/playwrighter/branches/main/protection
 ```
 
-**HTTP 200** — classic branch protection already active on `main`:
+**HTTP 404** — `Branch not protected` (classic API not configured).
 
-| Setting | Live value |
-| ------- | ---------- |
-| required_approving_review_count | 1 |
-| dismiss_stale_reviews | true |
-| require_code_owner_reviews | false |
-| required_conversation_resolution | true |
-| allow_force_pushes | false |
-| allow_deletions | false |
-| enforce_admins | false |
-| required_linear_history | false |
+### Repository rulesets
 
-Live policy matches the script JSON payload. Idempotent refresh via `APPLY=1 DRY_RUN=0` is optional.
+```bash
+gh api repos/weijia-89/playwrighter/rulesets
+```
+
+**HTTP 200** — three active rulesets on `~DEFAULT_BRANCH`:
+
+| ID | Name | Enforcement | Rules |
+| -- | ---- | ----------- | ----- |
+| 16807976 | protect-main-review-gated | active | deletion, code_quality, pull_request (0 approvals, conversation resolution), required_linear_history, non_fast_forward |
+| 16852424 | play-protect | active | deletion, non_fast_forward, required_linear_history, pull_request |
+| 16847876 | pw-prot | active | deletion, non_fast_forward, required_linear_history, pull_request |
+
+`main` is protected via rulesets today. Classic PUT from the script would add classic branch protection (manifest `apply_live: true`); operator may consolidate overlapping rulesets after apply.
 
 ## Verification
 
@@ -89,10 +93,11 @@ gh api repos/weijia-89/playwrighter/branches/main/protection
 
 ## Blockers
 
-None. Public repo on free tier supports classic branch protection; admin access confirmed.
+None for docs/script delivery. Classic PUT requires `APPLY=1`; rulesets already enforce PR + linear history on `main`.
 
 ## Open TODOs
 
-- Portfolio manifest row still lists `protected: "no"` — stale vs live GET; refresh manifest inventory on next wave scan.
+- Portfolio manifest row lists `protected: "no"` — stale vs live rulesets; refresh manifest inventory on next wave scan.
+- Consider consolidating three overlapping rulesets on `main`.
 - Optional: add required status checks when a canonical CI gate is chosen (script keeps `required_status_checks: null`).
-- Solo maintainer: choose Option A/B/C in `docs/BRANCH_PROTECTION.md` if PR self-merge is blocked by approval count = 1.
+- Solo maintainer: live `protect-main-review-gated` uses 0 approvals; script defaults to 1 — align if desired.
