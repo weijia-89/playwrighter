@@ -13,7 +13,7 @@ cp templates/playwright.config.ts your-project/
 cp templates/auth.setup.ts your-project/tests/
 cp templates/fixtures.ts your-project/tests/
 
-./tools/validate-suite.sh ./your-tests
+./tools/validate-suite.sh ./your-tests            # add --eslint to also run eslint-plugin-playwright (templates/eslint.config.mjs)
 node tools/score-tests.js ./your-tests --threshold=80
 ```
 
@@ -73,6 +73,7 @@ playwrighter/
 │       └── dashboard-page.ts
 ├── tools/
 │   ├── validate-suite.sh                  # Anti-pattern linter
+│   ├── test-validate-suite.sh             # Regression tests for the linter (run in CI)
 │   └── score-tests.js                     # 100-point quality rubric (scoreFile(); inline comment canonical)
 ├── ARCH.MD                                # Architecture + Mermaid diagrams
 ├── INDEX.md                               # Pattern topic map
@@ -188,6 +189,11 @@ See `templates/package.json` for a full dependency manifest.
 All patterns trace to primary sources:
 - [Playwright Official Docs](https://playwright.dev)
 - [`mxschmitt/awesome-playwright`](https://github.com/mxschmitt/awesome-playwright)
+
+### Acknowledgements
+
+- [`eslint-plugin-playwright`](https://github.com/playwright-community/eslint-plugin-playwright) (MIT): `templates/eslint.config.mjs` only configures its rules; no plugin code is copied. The rule names and semantics are the plugin's.
+- [TestDino's Playwright skill](https://github.com/testdino-hq/playwright-skill): its public pitfalls list was compared against `patterns/anti-patterns.md`, and the gaps were written up in this repo's own wording.
 
 ---
 

@@ -33,6 +33,14 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Regression-test validate-suite (with eslint parity)
+        run: |
+          mkdir "$RUNNER_TEMP/pw" && cd "$RUNNER_TEMP/pw"
+          npm init -y >/dev/null
+          npm i --ignore-scripts eslint@9 eslint-plugin-playwright@2.12.1 typescript-eslint
+          cp "$GITHUB_WORKSPACE/playwrighter/templates/eslint.config.mjs" .
+          ESLINT_PARITY_DIR="$PWD" "$GITHUB_WORKSPACE/playwrighter/tools/test-validate-suite.sh"
+
       - name: Lint northwind-qa with validate-suite
         run: |
           playwrighter/tools/validate-suite.sh northwind-qa/tests/
