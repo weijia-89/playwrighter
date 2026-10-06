@@ -8,10 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `templates/eslint.config.mjs` (configures the third-party eslint-plugin-playwright rules that overlap `validate-suite.sh`), `validate-suite.sh --eslint` (runs the consumer's eslint when installed, else grep only), and a parity fixture test asserting grep findings are a subset of the plugin's.
+- `validate-suite.sh`: error on matcherless `expect(...)` (single-line form), warn on empty-body `test.fixme`; strip control characters from echoed matches, skip `node_modules`, exit 2 when grep fails instead of reporting clean. `tools/test-validate-suite.sh` (20 cases) runs in the dogfood workflow.
 - Consumer bootstrap section in `templates/README.md` (templates → `tools/` → `npm run validate` / `score`); README enforcement map aligned with `validate-suite.sh` and `score-tests.js`.
 
 ### Changed
 
+- `patterns/anti-patterns.md`: 9 rows, written in this repo's own words after comparing against TestDino's published Playwright pitfalls (credit in README Acknowledgements): (unretried `innerHTML`/`inputValue` reads, try/catch around `expect`, assert-after-navigating-click, over-mocking own API, mutating `beforeAll`, missing `await`, `evaluate` for locator jobs, 3+ deep `describe`, no `test.step`). `templates/eslint.config.mjs` adds `missing-playwright-await`, `no-conditional-expect` (error), `no-nth-methods`, `no-magic-timeouts`, `max-nested-describe` (warn). `templates/test-template.ts` and `patterns/test-structure.md` tag through the details object.
 - Expanded inline rubric in `tools/score-tests.js` (category summaries, penalty tables, thresholds, limitations paraphrased from deleted scorecard); README fixture-import and non-scored guidance aligned with `scoreFile()`.
 - Scorer CLI banner renamed to **Quality Rubric** (post–scorecard purge); fixture-import exemption accepts `./fixtures` and `../fixtures`.
 

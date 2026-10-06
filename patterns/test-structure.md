@@ -21,7 +21,7 @@ test('[TC-042] Logged-in user can add item to cart @P1 @smoke', async ({ page })
 ### Why this format
 - **Test ID** (`TC-042`), links to test management / requirements
 - **Description**, human-readable
-- **Priority tag**, `@P0`, `@P1`, `@P2`, `@P3`
+- **Priority tag**, `@P0`, `@P1`, `@P2`, `@P3`. Prefer the details object, `test('title', { tag: ['@P1', '@smoke'] }, ...)`: tags stay out of the title and show in reports (title tags still work with `--grep`)
 - **Category tag**, `@smoke`, `@regression`, `@critical`, `@a11y`
 
 ### File naming

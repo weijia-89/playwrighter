@@ -5,6 +5,7 @@
 # Usage:
 #   ./validate-suite.sh [path]      # default: ./tests
 #   ./validate-suite.sh --strict    # exit 1 on warnings too
+#   ./validate-suite.sh --eslint    # also run the consumer's eslint-plugin-playwright (see templates/eslint.config.mjs)
 #
 # Exit codes:
 #   0 = no errors
@@ -16,13 +17,16 @@ set -uo pipefail
 # Parse flags + positional path (any order)
 TARGET=""
 STRICT=0
+ESLINT=0
 for arg in "$@"; do
   case "$arg" in
     --strict) STRICT=1 ;;
+    --eslint) ESLINT=1 ;;
     --help|-h)
       echo "Usage: $0 [path] [--strict]"
       echo "  path:    test directory (default ./tests)"
       echo "  --strict: exit 1 on warnings too"
+      echo "  --eslint: also run the consumer eslint-plugin-playwright, if installed"
       exit 0
       ;;
     --*)
@@ -41,6 +45,10 @@ fi
 
 ERRORS=0
 WARNINGS=0
+GREP_OPTS=(-rn --include='*.ts' --include='*.js' --exclude-dir=node_modules)
+
+# Indent matches; strip control chars so a hostile test file cannot inject terminal escapes
+indent() { LC_ALL=C tr -d '\000-\010\013-\037' | sed 's/^/   /'; }
 
 # Only colorize if stdout is a TTY
 if [[ -t 1 ]]; then
@@ -53,14 +61,21 @@ else
   green()  { printf "%s\n" "$*"; }
 fi
 
+# Run grep over TARGET into SCAN_OUT. rc>1 (unreadable file etc.) aborts instead of reporting a false "clean".
+scan() {
+  local rc
+  SCAN_OUT=$(grep "${GREP_OPTS[@]}" -E "$1" -- "$TARGET" 2>/dev/null); rc=$?
+  if (( rc > 1 )); then echo "Error: grep failed (rc=$rc) scanning $TARGET" >&2; exit 2; fi
+}
+
 check_error() {
   local pattern="$1"
   local label="$2"
   local matches
-  matches=$(grep -rn --include='*.ts' --include='*.js' -E "$pattern" "$TARGET" 2>/dev/null || true)
+  scan "$pattern"; matches=$SCAN_OUT
   if [[ -n "$matches" ]]; then
     red "❌ ERROR: $label"
-    echo "$matches" | sed 's/^/   /'
+    echo "$matches" | indent
     ERRORS=$((ERRORS + 1))
   fi
 }
@@ -69,10 +84,10 @@ check_warning() {
   local pattern="$1"
   local label="$2"
   local matches
-  matches=$(grep -rn --include='*.ts' --include='*.js' -E "$pattern" "$TARGET" 2>/dev/null || true)
+  scan "$pattern"; matches=$SCAN_OUT
   if [[ -n "$matches" ]]; then
     yellow "⚠️  WARN: $label"
-    echo "$matches" | sed 's/^/   /'
+    echo "$matches" | indent
     WARNINGS=$((WARNINGS + 1))
   fi
 }
@@ -97,10 +112,20 @@ check_error "\.toBeTruthy\(\)" \
   ".toBeTruthy() — use specific matcher (toBeVisible, toHaveCount, etc.)"
 
 check_error "test\.only\(" \
-  ".only() left in code — will be skipped by forbidOnly on CI"
+  ".only() left in code — fails CI via forbidOnly"
 
 check_error "page\.pause\(\)" \
   "page.pause() left in code — pauses test execution"
+
+# Matcherless expect: asserts nothing, test can never fail. Single-line form only;
+# a custom matcher not named to[A-Z]* would false-positive.
+scan '^[[:space:]]*(await +)?expect(\.soft)?\(.*\)[[:space:]]*;[[:space:]]*$'
+matchless=$(grep -vE '\)\.(not\.)?(to[A-Z]|resolves|rejects)' <<<"$SCAN_OUT" || true)
+if [[ -n "$matchless" ]]; then
+  red "❌ ERROR: expect() with no matcher — asserts nothing"
+  echo "$matchless" | indent
+  ERRORS=$((ERRORS + 1))
+fi
 
 # Warnings
 check_warning "page\.locator\(['\"][^'\"]*\\.[a-z]" \
@@ -124,8 +149,23 @@ check_warning "setTimeout\(" \
 check_warning "\{ *force: *true *\}" \
   "force: true bypasses actionability checks — use sparingly"
 
+check_warning "test\.fixme\(.*\{ *\} *\) *;" \
+  "empty-body test.fixme — placeholder, not a quarantine; add owner/ticket/expiry or delete"
+
 check_warning "if *\(await " \
   "Conditional in test (if (await ...)) — split into separate tests instead"
+
+# Optional AST-based pass: the consumer's own eslint + eslint-plugin-playwright (nothing is installed here)
+if [[ $ESLINT -eq 1 ]]; then
+  echo
+  if npx --no-install eslint --version >/dev/null 2>&1; then
+    echo "Running eslint on $TARGET..."
+    npx --no-install eslint -- "$TARGET" || ERRORS=$((ERRORS + 1))
+  else
+    yellow "⚠️  --eslint: eslint not installed here; grep checks only (see templates/eslint.config.mjs)"
+    WARNINGS=$((WARNINGS + 1))
+  fi
+fi
 
 # Reports
 echo

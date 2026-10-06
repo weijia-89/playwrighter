@@ -3,7 +3,8 @@
  *
  * Conventions:
  * - Test ID: [TC-XXX]
- * - Tags: @P0/@P1/@P2/@P3 + @smoke/@regression/@critical
+ * - Tags in the details object: { tag: ['@P0', '@smoke'] } (shown in reports, filterable with --grep;
+ *   use a trailing lookahead for ticket tags, e.g. --grep '@NFO-141(?!\d)')
  * - Arrange-Act-Assert structure
  * - Web-first assertions (await expect(...))
  * - Use custom fixtures (./fixtures), not raw @playwright/test
@@ -12,7 +13,7 @@
 import { test, expect } from './fixtures';
 
 test.describe('Feature: User Authentication', () => {
-  test('[TC-001] Valid credentials redirect to dashboard @P0 @smoke', async ({
+  test('[TC-001] Valid credentials redirect to dashboard', { tag: ['@P0', '@smoke'] }, async ({
     page,
     loginPage,
   }) => {
@@ -27,7 +28,7 @@ test.describe('Feature: User Authentication', () => {
     await expect(page.getByRole('heading', { name: /Welcome/i })).toBeVisible();
   });
 
-  test('[TC-002] Invalid password shows error @P1 @regression', async ({
+  test('[TC-002] Invalid password shows error', { tag: ['@P1', '@regression'] }, async ({
     loginPage,
   }) => {
     // Arrange
@@ -40,7 +41,7 @@ test.describe('Feature: User Authentication', () => {
     await expect(loginPage.errorMessageLocator()).toContainText(/invalid/i);
   });
 
-  test('[TC-003] Logout returns to login page @P1', async ({
+  test('[TC-003] Logout returns to login page', { tag: '@P1' }, async ({
     page,
     loginPage,
     dashboardPage,
